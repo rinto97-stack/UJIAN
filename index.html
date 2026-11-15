@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MTs PN 2 KEEROM — Aplikasi Ujian & Pengolah Nilai Mobile</title>
-  
+  <title>MTs PN 2 KEEROM — Sistem Ujian CBT Mobile & Pengolah Nilai</title>
+
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -19,8 +19,15 @@
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
           },
+          colors: {
+            madrasah: {
+              DEFAULT: '#047857',
+              dark: '#065f46',
+              light: '#10b981',
+            }
+          },
           boxShadow: {
-            'mobile': '0 25px 60px -15px rgba(15, 23, 42, 0.22)',
+            'mobile': '0 25px 60px -15px rgba(15, 23, 42, 0.25)',
             'card': '0 4px 20px -2px rgba(15, 23, 42, 0.06)',
           }
         }
@@ -29,7 +36,6 @@
   </script>
 
   <style>
-    /* Pengaturan dasar tipografi dan mencegah seleksi teks saat ujian aktif */
     body {
       font-family: 'Inter', sans-serif;
       background-color: #e2e8f0;
@@ -43,7 +49,7 @@
       user-select: none;
     }
 
-    /* Scrollbar halus untuk kontainer mobile dan tabel sheet nilai */
+    /* Scrollbar halus untuk kontainer mobile dan tabel spreadsheet */
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
@@ -59,7 +65,7 @@
       background: #94a3b8;
     }
 
-    /* Animasi tirai keamanan & modal */
+    /* Animasi modal & kartu */
     @keyframes fadeInScale {
       from { opacity: 0; transform: scale(0.96); }
       to { opacity: 1; transform: scale(1); }
@@ -68,7 +74,32 @@
       animation: fadeInScale 0.2s ease-out forwards;
     }
 
-    /* Aturan Cetak Khusus untuk Dafnil (Daftar Nilai) */
+    /* Overlay Watermark Keamanan Diagonal Dinamis */
+    .watermark-grid {
+      position: absolute;
+      inset: -40%;
+      width: 180%;
+      height: 180%;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+      gap: 28px 24px;
+      transform: rotate(-26deg);
+      pointer-events: none;
+      z-index: 20;
+      overflow: hidden;
+    }
+    .watermark-item {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: rgba(4, 120, 87, 0.085);
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    /* Aturan Cetak Khusus untuk Dafnil (Daftar Nilai Resmi MTs PN 2 KEEROM) */
     @media print {
       body {
         background: #ffffff !important;
@@ -82,6 +113,7 @@
         max-width: 100% !important;
         width: 100% !important;
         min-height: auto !important;
+        max-height: none !important;
         border: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
@@ -89,7 +121,7 @@
         padding: 0 !important;
         overflow: visible !important;
       }
-      #main-scroll-area {
+      #app-content, #main-scroll-area {
         overflow: visible !important;
         height: auto !important;
         padding: 0 !important;
@@ -125,96 +157,70 @@
 
   <!-- Bingkai Aplikasi Mobile-First Utama -->
   <div id="app-shell" class="w-full sm:max-w-[480px] min-h-screen sm:min-h-[820px] sm:max-h-[92vh] bg-slate-50 sm:rounded-[2.25rem] sm:border-[6px] sm:border-slate-900 shadow-mobile flex flex-col overflow-hidden relative">
-    
+
     <!-- Status Bar Ala Perangkat Mobile -->
-    <div class="no-print bg-slate-900 text-white px-5 py-1.5 flex items-center justify-between text-[11px] font-medium select-none shrink-0">
+    <div class="no-print bg-slate-950 text-white px-5 py-1.5 flex items-center justify-between text-[11px] font-medium select-none shrink-0">
       <div class="flex items-center gap-1.5">
         <span id="mobile-clock">08:00</span>
         <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span class="text-[10px] text-emerald-300 font-semibold tracking-wide">MTs PN 2 KEEROM</span>
       </div>
-      <div class="hidden sm:block w-20 h-3.5 bg-black rounded-full"></div>
+      <div class="hidden sm:block w-16 h-3 bg-black rounded-full"></div>
       <div class="flex items-center gap-2 text-slate-300">
-        <!-- Ikon Sinyal & Baterai -->
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2 20h20V4L2 20zm18-2H6.83L20 6.83V18z"/></svg>
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3C7.79 3 3.7 4.41.38 7L12 21.5 23.62 7C20.3 4.41 16.21 3 12 3z"/></svg>
-        <div class="flex items-center gap-0.5">
-          <div class="w-5 h-2.5 border border-slate-300 rounded-[3px] p-[1px] flex items-center">
-            <div class="w-full h-full bg-emerald-400 rounded-[1px]"></div>
-          </div>
+        <div class="w-5 h-2.5 border border-slate-300 rounded-[3px] p-[1px] flex items-center">
+          <div class="w-full h-full bg-emerald-400 rounded-[1px]"></div>
         </div>
       </div>
     </div>
 
     <!-- Area Konten Dinamis Aplikasi -->
-    <div id="app-content" class="flex-1 flex flex-col overflow-hidden"></div>
+    <div id="app-content" class="flex-1 flex flex-col overflow-hidden relative"></div>
 
   </div>
 
-  <!-- TIRAI KUNCI LAYAR ANTI-SCREENSHOT & PEREKAMAN LAYAR -->
-  <div id="screenshot-curtain" class="hidden fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl text-white flex flex-col items-center justify-center p-6 text-center select-none">
-    <div class="w-20 h-20 rounded-3xl bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center mb-5 animate-bounce">
+  <!-- TIRAI KUNCI LAYAR ANTI-SCREENSHOT & PRIVASI PENUH -->
+  <div id="screenshot-curtain" class="hidden fixed inset-0 z-[100] bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center select-none">
+    <div class="w-20 h-20 rounded-3xl bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center mb-5 animate-pulse">
       <svg class="w-10 h-10 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
       </svg>
     </div>
-    <span class="px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-xs font-bold tracking-wider uppercase mb-3">
-      Proteksi Keamanan Aktif
+    <span class="px-3.5 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[11px] font-extrabold tracking-wider uppercase mb-3">
+      Sistem Keamanan Ujian Madrasah
     </span>
-    <h2 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight mb-2">
-      LAYAR DIKUNCI: Screenshot &amp; Perekaman Layar Dilarang!
+    <h2 class="text-lg sm:text-xl font-black text-white tracking-tight mb-2 max-w-sm">
+      LAYAR TERKUNCI — PROTEKSI ANTI-SCREENSHOT MTs PN 2 KEEROM
     </h2>
-    <p id="curtain-reason" class="text-sm text-slate-300 max-w-xs mb-6 leading-relaxed">
-      Sistem mendeteksi upaya pengambilan tangkapan layar atau perpindahan jendela. Kejadian ini dicatat sebagai pelanggaran ujian.
+    <p id="curtain-reason" class="text-xs sm:text-sm text-slate-300 max-w-xs mb-5 leading-relaxed">
+      Sistem mendeteksi upaya pengambilan tangkapan layar, perpindahan tab, atau kehilangan fokus layar. Kejadian ini tercatat dalam log pelanggaran siswa.
     </p>
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl px-6 py-3">
-      <p class="text-xs text-slate-400">Layar ujian akan terbuka otomatis dalam</p>
-      <p id="curtain-countdown" class="text-2xl font-extrabold text-rose-400 mt-0.5">4 detik</p>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl px-5 py-3 mb-6 max-w-xs w-full">
+      <p id="curtain-violation-status" class="text-xs font-bold text-rose-400">Pelanggaran Tercatat</p>
+      <p class="text-[11px] text-slate-400 mt-0.5">Soal disembunyikan sementara demi integritas ujian</p>
     </div>
+    <button type="button" onclick="unlockScreenshotCurtain()" class="w-full max-w-xs py-3.5 px-5 rounded-2xl bg-[#047857] hover:bg-emerald-600 active:scale-[0.99] text-white font-extrabold text-sm shadow-lg shadow-emerald-900/40 transition">
+      🔓 Buka Kunci &amp; Lanjutkan Ujian
+    </button>
   </div>
 
-  <!-- MODAL PERINGATAN PELANGGARAN ANTI-NYONTEK -->
-  <div id="violation-modal" class="hidden fixed inset-0 z-[90] bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-rose-500 animate-modal text-center">
-      <div class="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        </svg>
-      </div>
-      <span id="violation-badge" class="inline-block px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold mb-2">
-        Pelanggaran ke-1 dari 3
-      </span>
-      <h3 class="text-lg font-extrabold text-slate-900 mb-1.5">Peringatan Anti-Nyontek!</h3>
-      <p id="violation-reason-text" class="text-sm text-slate-600 mb-4 leading-relaxed">
-        Anda terdeteksi meninggalkan halaman ujian.
-      </p>
-      <div class="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800 mb-5 text-left">
-        <strong>Perhatian:</strong> Jika jumlah pelanggaran mencapai batas maksimal, ujian akan dikunci dan dikumpulkan secara otomatis dengan status <em>Terindikasi Pelanggaran</em>.
-      </div>
-      <button onclick="closeViolationModal()" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-semibold text-sm transition shadow-md">
-        Saya Mengerti &amp; Lanjutkan Ujian
-      </button>
-    </div>
-  </div>
-
-  <!-- MODAL KONFIRMASI / DIALOG CUSTOM (PENGGANTI ALERT & CONFIRM) -->
-  <div id="custom-modal" class="hidden fixed inset-0 z-[95] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <!-- MODAL CUSTOM KONFIRMASI / INPUT (PENGGANTI ALERT & CONFIRM) -->
+  <div id="custom-modal" class="hidden fixed inset-0 z-[95] bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 animate-modal">
-      <div id="custom-modal-icon" class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-[#047857] flex items-center justify-center mb-3">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
       </div>
       <h3 id="custom-modal-title" class="text-lg font-bold text-slate-900 mb-1">Konfirmasi</h3>
-      <p id="custom-modal-desc" class="text-sm text-slate-600 mb-4 leading-relaxed"></p>
-      <div id="custom-modal-input-wrap" class="hidden mb-4">
-        <input id="custom-modal-input" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Masukkan nama..." />
-        <div id="custom-modal-presets" class="flex flex-wrap gap-1.5 mt-2"></div>
-      </div>
+      <p id="custom-modal-desc" class="text-xs sm:text-sm text-slate-600 mb-4 leading-relaxed"></p>
+      <div id="custom-modal-body" class="mb-4"></div>
       <div class="flex gap-2.5">
         <button id="custom-modal-cancel" onclick="closeCustomModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition">
           Batal
         </button>
-        <button id="custom-modal-confirm" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition shadow-sm">
+        <button id="custom-modal-confirm" class="flex-1 py-2.5 rounded-xl bg-[#047857] hover:bg-emerald-800 text-white font-semibold text-sm transition shadow-sm">
           Ya, Lanjutkan
         </button>
       </div>
@@ -227,205 +233,200 @@
   <script>
     /**
      * ============================================================================
-     * EDUEXAM SHIELD — LOGIKA UTAMA APLIKASI UJIAN & PENGOLAH NILAI MOBILE
+     * MTs PN 2 KEEROM — SISTEM UJIAN CBT MOBILE & PENGOLAH NILAI
      * ============================================================================
-     * Arsitektur State Tunggal dengan sinkronisasi otomatis ke localStorage.
      */
 
-    const STORAGE_KEY = 'eduexam_shield_v1_state';
+    const STORAGE_KEY = 'mts_pn2_keerom_cbt_v1';
+    const CLASS_OPTIONS = ['VII-A', 'VII-B', 'VIII-A', 'VIII-B', 'IX-A', 'IX-B'];
 
-    // Definisi 4 Mode Ujian Lengkap beserta karakteristik masing-masing
+    // 4 Mode Ujian Lengkap sesuai standar evaluasi MTs PN 2 KEEROM
     const EXAM_MODES = {
       quiz: {
         id: 'quiz',
         name: 'Ujian Harian / Kuis Cepat',
         shortName: 'Kuis Cepat',
         badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-        accent: 'emerald',
-        description: 'Durasi singkat, urutan soal diacak, dan menampilkan feedback jawaban benar/salah secara langsung.',
-        features: ['Acak Soal', 'Feedback Langsung', 'Durasi Singkat']
+        description: 'Feedback kunci jawaban & pembahasan langsung muncul seketika setelah siswa memilih opsi jawaban.',
+        features: ['Feedback Langsung', 'Acak Urutan Soal', 'Evaluasi Harian']
       },
       strict: {
         id: 'strict',
         name: 'UTS / UAS (Mode Ketat)',
         shortName: 'UTS/UAS Ketat',
         badgeBg: 'bg-rose-100 text-rose-800 border-rose-200',
-        accent: 'rose',
-        description: 'Acak soal & opsi jawaban, kunci layar penuh otomatis, batas pelanggaran ketat, dan timer wajib.',
-        features: ['Acak Soal & Opsi', 'Kunci Layar Penuh', 'Anti-Nyontek Ketat']
+        description: 'Acak wajib soal & opsi jawaban, batas maksimal 2 pelanggaran fokus sebelum auto-submit, tanpa feedback langsung.',
+        features: ['Acak Soal & Opsi Wajib', 'Maks. 2 Pelanggaran', 'Tanpa Bocoran Kunci']
       },
       cat: {
         id: 'cat',
         name: 'Try Out / Simulasi CAT',
         shortName: 'Simulasi CAT',
-        badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-        accent: 'indigo',
-        description: 'Simulasi Computer Assisted Test dengan navigasi nomor soal interaktif, penanda ragu-ragu, dan indikator passing grade.',
-        features: ['Navigasi Nomor CAT', 'Tandai Ragu-Ragu', 'Indikator Passing Grade']
+        badgeBg: 'bg-amber-100 text-amber-900 border-amber-200',
+        description: 'Simulasi Computer Assisted Test dengan navigasi nomor soal interaktif dan penanda bendera kuning Ragu-Ragu.',
+        features: ['Navigasi Nomor CAT', 'Bendera Ragu-Ragu', 'Simulasi Ujian Akhir']
       },
       remedial: {
         id: 'remedial',
         name: 'Ujian Remedial',
-        shortName: 'Remedial',
-        badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
-        accent: 'amber',
-        description: 'Ujian perbaikan nilai dengan target KKM khusus dan penentuan status otomatis Tuntas atau Belum Tuntas.',
-        features: ['Target KKM Khusus', 'Status Tuntas Otomatis', 'Sinkron Sheet Nilai']
+        shortName: 'Remedial KKM 75',
+        badgeBg: 'bg-teal-100 text-teal-900 border-teal-200',
+        description: 'Mode perbaikan ketuntasan belajar yang berfokus mencapai standar KKM 75 dan langsung menyinkronkan nilai.',
+        features: ['Fokus Target KKM 75', 'Status Tuntas Otomatis', 'Sinkron Sheet Nilai']
       }
     };
 
-    // Bank soal bawaan siap pakai (8 soal pilihan ganda berkualitas)
+    // Bank soal bawaan MTs PN 2 KEEROM
     const DEFAULT_QUESTIONS = [
       {
         id: 'q1',
-        pertanyaan: 'Manakah protokol keamanan yang digunakan untuk mengenkripsi komunikasi data antara peramban web dan server?',
-        opsi_a: 'HTTP (Hypertext Transfer Protocol)',
-        opsi_b: 'HTTPS (HTTP Secure dengan TLS/SSL)',
-        opsi_c: 'FTP (File Transfer Protocol)',
-        opsi_d: 'TELNET (Teletype Network)',
+        pertanyaan: 'Dalam sistem bilangan biner yang digunakan pada perangkat komputer, angka desimal 13 jika dikonversi ke biner menjadi...',
+        opsi_a: '1011',
+        opsi_b: '1101',
+        opsi_c: '1110',
+        opsi_d: '1001',
         kunci: 'B',
         bobot: 15,
-        pembahasan: 'HTTPS menggunakan enkripsi TLS/SSL untuk melindungi kerahasiaan dan integritas data.'
+        pembahasan: '13 = 8 + 4 + 0 + 1 = (1×2³) + (1×2²) + (0×2¹) + (1×2⁰) = 1101.'
       },
       {
         id: 'q2',
-        pertanyaan: 'Dalam struktur algoritma percabangan, pernyataan manakah yang digunakan untuk mengevaluasi beberapa kondisi secara berurutan?',
-        opsi_a: 'if - else if - else',
-        opsi_b: 'for - while - do',
-        opsi_c: 'try - catch - finally',
-        opsi_d: 'import - export - default',
-        kunci: 'A',
+        pertanyaan: 'Perubahan wujud zat dari gas langsung menjadi padat tanpa melalui fase cair, seperti proses terbentuknya salju, disebut...',
+        opsi_a: 'Menyublim',
+        opsi_b: 'Mengembun',
+        opsi_c: 'Mengkristal (Deposisi)',
+        opsi_d: 'Membeku',
+        kunci: 'C',
         bobot: 15,
-        pembahasan: 'Blok if - else if - else mengevaluasi beberapa kondisi logika secara berurutan.'
+        pembahasan: 'Mengkristal atau deposisi adalah perubahan wujud dari gas langsung menjadi padat.'
       },
       {
         id: 'q3',
-        pertanyaan: 'Jika sebuah file berukuran 24 Megabyte (MB) diunduh dengan kecepatan stabil 3 Megabyte per detik (MB/s), berapa detik waktu yang dibutuhkan?',
-        opsi_a: '6 detik',
-        opsi_b: '8 detik',
-        opsi_c: '12 detik',
-        opsi_d: '72 detik',
+        pertanyaan: 'Pada aplikasi pengolah angka (Spreadsheet), fungsi yang digunakan untuk menghitung nilai rata-rata dari sekumpulan data adalah...',
+        opsi_a: 'SUM',
+        opsi_b: 'AVERAGE',
+        opsi_c: 'MAX',
+        opsi_d: 'COUNT',
         kunci: 'B',
         bobot: 10,
-        pembahasan: 'Waktu = Ukuran File / Kecepatan = 24 MB / 3 MB/s = 8 detik.'
+        pembahasan: 'Fungsi AVERAGE menghitung nilai rata-rata aritmatika dari sekumpulan sel angka.'
       },
       {
         id: 'q4',
-        pertanyaan: 'Apa fungsi utama dari autentikasi dua faktor (2FA) pada akun digital?',
-        opsi_a: 'Mempercepat koneksi internet perangkat',
-        opsi_b: 'Menghapus riwayat penjelajahan otomatis',
-        opsi_c: 'Menambah lapisan verifikasi keamanan selain kata sandi',
-        opsi_d: 'Mengompresi ukuran penyimpanan cloud',
+        pertanyaan: 'Jika diketahui persamaan linear satu variabel 4x - 5 = 19, maka nilai dari x + 3 adalah...',
+        opsi_a: '6',
+        opsi_b: '8',
+        opsi_c: '9',
+        opsi_d: '11',
         kunci: 'C',
         bobot: 15,
-        pembahasan: '2FA meminta faktor verifikasi kedua (seperti kode OTP) sehingga akun tetap aman meski sandi bocor.'
+        pembahasan: '4x = 19 + 5 → 4x = 24 → x = 6. Maka x + 3 = 6 + 3 = 9.'
       },
       {
         id: 'q5',
-        pertanyaan: 'Pada aplikasi pengolah angka (spreadsheet), fungsi manakah yang digunakan untuk menghitung rata-rata sekumpulan nilai numerik?',
-        opsi_a: 'SUM',
-        opsi_b: 'COUNTIF',
-        opsi_c: 'AVERAGE',
-        opsi_d: 'VLOOKUP',
-        kunci: 'C',
+        pertanyaan: 'Organel pada sel tumbuhan yang berfungsi sebagai tempat berlangsungnya proses fotosintesis adalah...',
+        opsi_a: 'Kloroplas',
+        opsi_b: 'Mitokondria',
+        opsi_c: 'Ribosom',
+        opsi_d: 'Vakuola',
+        kunci: 'A',
         bobot: 15,
-        pembahasan: 'Fungsi AVERAGE menghitung nilai rata-rata aritmatika dari rentang sel.'
+        pembahasan: 'Kloroplas mengandung zat hijau daun (klorofil) untuk menyerap energi cahaya dalam fotosintesis.'
       },
       {
         id: 'q6',
-        pertanyaan: 'Teknik manipulasi psikologis untuk menipu pengguna agar memberikan informasi rahasia seperti kata sandi disebut...',
-        opsi_a: 'Social Engineering / Phishing',
-        opsi_b: 'Defragmentation',
-        opsi_c: 'Overclocking',
-        opsi_d: 'Load Balancing',
-        kunci: 'A',
+        pertanyaan: 'Protokol keamanan web yang mengenkripsi pertukaran data antara browser siswa dan server ujian ditandai dengan awalan...',
+        opsi_a: 'HTTP://',
+        opsi_b: 'FTP://',
+        opsi_c: 'HTTPS://',
+        opsi_d: 'SMTP://',
+        kunci: 'C',
         bobot: 10,
-        pembahasan: 'Phishing adalah bentuk social engineering yang menyamar sebagai pihak tepercaya untuk mencuri data.'
+        pembahasan: 'HTTPS (Hypertext Transfer Protocol Secure) melindungi integritas dan kerahasiaan data.'
       },
       {
         id: 'q7',
-        pertanyaan: 'Bilangan biner 10110 jika dikonversi ke dalam sistem bilangan desimal bernilai...',
-        opsi_a: '18',
-        opsi_b: '20',
-        opsi_c: '22',
-        opsi_d: '26',
-        kunci: 'C',
+        pertanyaan: 'Gagasan utama yang menjadi inti pembahasan dalam sebuah paragraf disebut...',
+        opsi_a: 'Kalimat penjelas',
+        opsi_b: 'Ide pokok',
+        opsi_c: 'Konjungsi antarparagraf',
+        opsi_d: 'Amanat cerita',
+        kunci: 'B',
         bobot: 10,
-        pembahasan: '1×16 + 0×8 + 1×4 + 1×2 + 0×1 = 16 + 4 + 2 = 22.'
+        pembahasan: 'Ide pokok merupakan gagasan utama yang mendasari pengembangan suatu paragraf.'
       },
       {
         id: 'q8',
-        pertanyaan: 'Manakah komponen perangkat keras yang bertugas menyimpan data secara sementara saat program sedang dijalankan?',
-        opsi_a: 'Hard Disk Drive (HDD)',
-        opsi_b: 'Random Access Memory (RAM)',
-        opsi_c: 'Power Supply Unit (PSU)',
-        opsi_d: 'Optical Disc Drive',
-        kunci: 'B',
+        pertanyaan: 'Sumber energi terbarukan yang memanfaatkan aliran air sungai untuk menggerakkan turbin pembangkit listrik adalah...',
+        opsi_a: 'PLTU',
+        opsi_b: 'PLTD',
+        opsi_c: 'PLTA',
+        opsi_d: 'PLTG',
+        kunci: 'C',
         bobot: 10,
-        pembahasan: 'RAM merupakan memori volatil berkecepatan tinggi untuk menyimpan data sementara program aktif.'
+        pembahasan: 'PLTA (Pembangkit Listrik Tenaga Air) memanfaatkan energi potensial dan kinetik air.'
       }
     ];
 
     // Paket soal alternatif untuk tombol "Muat Contoh Paket Soal Baru"
     const SAMPLE_NEW_PACKAGE = [
       {
-        id: 'pkg_1',
-        pertanyaan: 'Perubahan wujud benda dari gas langsung menjadi padat tanpa melalui fase cair disebut...',
-        opsi_a: 'Menyublim',
-        opsi_b: 'Mengkristal / Deposisi',
-        opsi_c: 'Mengembun',
-        opsi_d: 'Mencair',
+        id: 'pkg_mts_1',
+        pertanyaan: 'Hasil dari (-18) + 25 - (-7) adalah...',
+        opsi_a: '0',
+        opsi_b: '14',
+        opsi_c: '-14',
+        opsi_d: '50',
         kunci: 'B',
         bobot: 20,
-        pembahasan: 'Mengkristal (deposisi) adalah perubahan wujud gas menjadi padat, contohnya pembentukan salju.'
+        pembahasan: '-18 + 25 = 7; kemudian 7 - (-7) = 7 + 7 = 14.'
       },
       {
-        id: 'pkg_2',
-        pertanyaan: 'Organel sel tumbuhan yang berperan utama dalam proses fotosintesis adalah...',
-        opsi_a: 'Mitokondria',
-        opsi_b: 'Ribosom',
-        opsi_c: 'Kloroplas',
-        opsi_d: 'Lisosom',
+        id: 'pkg_mts_2',
+        pertanyaan: 'Bagian mata yang berfungsi mengatur banyak sedikitnya cahaya yang masuk ke dalam bola mata adalah...',
+        opsi_a: 'Retina',
+        opsi_b: 'Kornea',
+        opsi_c: 'Pupil dan Iris',
+        opsi_d: 'Saraf optik',
         kunci: 'C',
         bobot: 20,
-        pembahasan: 'Kloroplas mengandung pigmen klorofil untuk menangkap energi cahaya dalam fotosintesis.'
+        pembahasan: 'Iris mengatur besar kecilnya pupil untuk mengendalikan intensitas cahaya masuk.'
       },
       {
-        id: 'pkg_3',
-        pertanyaan: 'Jika 3x + 7 = 22, maka nilai dari 2x + 1 adalah...',
-        opsi_a: '9',
-        opsi_b: '10',
-        opsi_c: '11',
-        opsi_d: '13',
-        kunci: 'C',
+        id: 'pkg_mts_3',
+        pertanyaan: 'Perangkat keras jaringan yang berfungsi menghubungkan dua atau lebih jaringan berbeda serta menentukan rute paket data adalah...',
+        opsi_a: 'Router',
+        opsi_b: 'Scanner',
+        opsi_c: 'Plotter',
+        opsi_d: 'Projector',
+        kunci: 'A',
         bobot: 20,
-        pembahasan: '3x = 15 → x = 5. Maka 2(5) + 1 = 11.'
+        pembahasan: 'Router bertugas meneruskan paket data antarjaringan komputer.'
       },
       {
-        id: 'pkg_4',
-        pertanyaan: 'Ide pokok atau gagasan utama yang menjadi dasar pengembangan sebuah paragraf disebut...',
-        opsi_a: 'Kalimat penjelas',
-        opsi_b: 'Gagasan utama',
-        opsi_c: 'Konjungsi antarparagraf',
-        opsi_d: 'Majas hiperbola',
+        id: 'pkg_mts_4',
+        pertanyaan: 'Kalimat berikut yang menggunakan kata baku sesuai Pedoman Umum Ejaan Bahasa Indonesia (PUEBI) adalah...',
+        opsi_a: 'Para siswa sedang melakukan praktek laboratorium.',
+        opsi_b: 'Jadwal ujian madrasah telah disahkan oleh kepala sekolah.',
+        opsi_c: 'Apotik itu buka selama dua puluh empat jam.',
+        opsi_d: 'Ia membeli obat menggunakan kwitansi resmi.',
         kunci: 'B',
         bobot: 20,
-        pembahasan: 'Gagasan utama adalah inti pembahasan yang dijelaskan oleh kalimat-kalimat penjelas.'
+        pembahasan: 'Kata "jadwal" merupakan bentuk baku (bukan "jadual").'
       },
       {
-        id: 'pkg_5',
-        pertanyaan: 'Sumber energi terbarukan yang memanfaatkan panas dari dalam kerak bumi disebut energi...',
-        opsi_a: 'Biomassa',
-        opsi_b: 'Geotermal (Panas Bumi)',
-        opsi_c: 'Fosil',
-        opsi_d: 'Nuklir Fisi',
+        id: 'pkg_mts_5',
+        pertanyaan: 'Salah satu perilaku terpuji dalam mengerjakan ujian CBT adalah menjunjung tinggi sifat jujur yang dalam ajaran Islam dikenal dengan istilah...',
+        opsi_a: 'Amanah',
+        opsi_b: 'Shiddiq',
+        opsi_c: 'Tabligh',
+        opsi_d: 'Fathanah',
         kunci: 'B',
         bobot: 20,
-        pembahasan: 'Energi geotermal berasal dari panas alami di bawah permukaan bumi.'
+        pembahasan: 'Shiddiq berarti benar dan jujur dalam perkataan maupun perbuatan.'
       }
     ];
 
-    // State Bawaan Aplikasi
     function getInitialState() {
       return {
         role: null, // null | 'student' | 'admin'
@@ -434,45 +435,46 @@
         studentStage: 'lobby', // 'lobby' | 'exam' | 'result'
         currentStudent: null,
         examConfig: {
-          title: 'Penilaian Tengah Semester — Informatika & Literasi Digital',
-          subject: 'Informatika',
-          targetClass: 'XI IPA 1',
+          title: 'Penilaian Akhir Semester (PAS) Ganjil',
+          subject: 'Informatika & Literasi Digital',
+          targetClass: 'VIII-A',
           token: 'UJIAN2026',
           mode: 'strict', // 'quiz' | 'strict' | 'cat' | 'remedial'
           durationMinutes: 15,
           kkm: 75,
-          maxViolations: 3,
-          schoolName: 'SMA NEGERI 1 NUSANTARA',
-          semester: 'Ganjil / Tahun Ajaran 2026–2027',
-          teacherName: 'Drs. Hendra Wijaya, M.Pd.',
-          teacherNip: '19780512 200501 1 009',
-          principalName: 'Dra. Siti Aminah, M.M.',
-          principalNip: '19720817 199802 2 003'
+          maxViolations: 2,
+          semester: 'Ganjil / Tahun Pelajaran 2026–2027',
+          teacherName: 'Ahmad Fauzi, S.Pd., Gr.',
+          teacherNip: '19860415 201101 1 008',
+          principalName: 'H. Muhammad Yusuf, S.Ag., M.Pd.I.',
+          principalNip: '19740920 200003 1 004'
         },
         questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
         scoreColumns: [
           { id: 'col_uh1', label: 'UH 1' },
+          { id: 'col_uh2', label: 'UH 2' },
           { id: 'col_uts', label: 'UTS' },
-          { id: 'col_ujian', label: 'Ujian Aktif' }
+          { id: 'col_uas', label: 'UAS' }
         ],
         studentsData: [
-          { id: 'st_1', nis: '20260101', name: 'Alya Putri Maharani', kelas: 'XI IPA 1', scores: { col_uh1: 88, col_uts: 85, col_ujian: 92 }, note: '' },
-          { id: 'st_2', nis: '20260102', name: 'Bagas Pratama', kelas: 'XI IPA 1', scores: { col_uh1: 72, col_uts: 68, col_ujian: 70 }, note: '' },
-          { id: 'st_3', nis: '20260103', name: 'Citra Dewi Lestari', kelas: 'XI IPA 1', scores: { col_uh1: 95, col_uts: 90, col_ujian: 96 }, note: '' },
-          { id: 'st_4', nis: '20260104', name: 'Dimas Arya Nugraha', kelas: 'XI IPA 1', scores: { col_uh1: 78, col_uts: 80, col_ujian: 76 }, note: '' },
-          { id: 'st_5', nis: '20260105', name: 'Eka Saputra', kelas: 'XI IPA 1', scores: { col_uh1: 65, col_uts: 70, col_ujian: 64 }, note: '' }
+          { id: 'st_1', nisn: '0114829101', name: 'Aisyah Nur Rahmah', kelas: 'VIII-A', scores: { col_uh1: 90, col_uh2: 88, col_uts: 86, col_uas: 92 }, note: '' },
+          { id: 'st_2', nisn: '0114829102', name: 'Muhammad Rizky Pratama', kelas: 'VIII-A', scores: { col_uh1: 78, col_uh2: 80, col_uts: 76, col_uas: 82 }, note: '' },
+          { id: 'st_3', nisn: '0114829103', name: 'Siti Fatimah Az-Zahra', kelas: 'VIII-A', scores: { col_uh1: 95, col_uh2: 92, col_uts: 94, col_uas: 96 }, note: '' },
+          { id: 'st_4', nisn: '0114829104', name: 'Ahmad Zaki Maulana', kelas: 'VIII-A', scores: { col_uh1: 68, col_uh2: 70, col_uts: 65, col_uas: 72 }, note: '' },
+          { id: 'st_5', nisn: '0114829105', name: 'Nabila Khairunnisa', kelas: 'VII-A', scores: { col_uh1: 84, col_uh2: 82, col_uts: 80, col_uas: 85 }, note: '' },
+          { id: 'st_6', nisn: '0114829106', name: 'Fadhil Akbar Wijaya', kelas: 'IX-A', scores: { col_uh1: 88, col_uh2: 86, col_uts: 85, col_uas: 90 }, note: '' }
         ],
+        dafnilFilterClass: 'VIII-A',
+        dafnilFilterSubject: 'Informatika & Literasi Digital',
         lastExamResult: null
       };
     }
 
-    // Muat state dari localStorage atau gunakan bawaan
     let appState = (() => {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          // Selalu mulai sesi ujian aktif dalam keadaan bersih jika reload saat ujian
           if (parsed.role === 'student' && parsed.studentStage === 'exam') {
             parsed.studentStage = 'lobby';
           }
@@ -492,14 +494,14 @@
       }
     }
 
-    // Variabel runtime sesi ujian aktif (tidak disimpan mentah di localStorage)
+    // State runtime sesi ujian aktif
     let examSession = {
       active: false,
-      questions: [], // soal & opsi yang sudah diacak
+      questions: [],
       currentIndex: 0,
-      answers: {}, // { questionId: 'A' | 'B' | 'C' | 'D' }
-      doubts: {}, // { questionId: true } untuk mode CAT
-      lockedQuestions: {}, // untuk mode Kuis Cepat (feedback langsung)
+      answers: {},
+      doubts: {},
+      lockedQuestions: {},
       remainingSeconds: 0,
       totalSeconds: 0,
       timerInterval: null,
@@ -507,17 +509,30 @@
       violationLogs: [],
       lastViolationTime: 0,
       initialWidth: window.innerWidth,
-      initialHeight: window.innerHeight,
-      curtainTimer: null
+      initialHeight: window.innerHeight
     };
 
     /**
      * ============================================================================
-     * UTILITAS UMUM: AUDIO BEEP, TOAST, MODAL CUSTOM, JAM MOBILE
+     * UTILITAS: EMBLEM MADRASAH, AUDIO BEEP, TOAST, MODAL CUSTOM, JAM LIVE
      * ============================================================================
      */
 
-    // Efek suara peringatan sintetis menggunakan Web Audio API (tanpa URL eksternal)
+    function renderMadrasahEmblem(sizeClass = 'w-16 h-16', iconClass = 'w-9 h-9') {
+      return `
+        <div class="${sizeClass} rounded-3xl bg-gradient-to-br from-[#047857] via-emerald-700 to-teal-900 text-white flex items-center justify-center shadow-lg shadow-emerald-900/25 border-2 border-emerald-400/30 shrink-0">
+          <svg class="${iconClass}" viewBox="0 0 48 48" fill="none">
+            <!-- Bintang Segi Delapan Khas Madrasah -->
+            <polygon points="24,3 30,11 40,11 40,21 45,27 40,33 40,41 30,41 24,46 18,41 8,41 8,33 3,27 8,21 8,11 18,11" stroke="currentColor" stroke-width="2.2" fill="rgba(255,255,255,0.1)"/>
+            <!-- Buku Terbuka & Pena Ilmu -->
+            <path d="M14 20C17.5 18.5 21 19 24 21C27 19 30.5 18.5 34 20V32C30.5 30.5 27 31 24 33C21 31 17.5 30.5 14 32V20Z" stroke="#fde68a" stroke-width="2.2" stroke-linejoin="round" fill="rgba(253,230,138,0.15)"/>
+            <path d="M24 21V33" stroke="#fde68a" stroke-width="2"/>
+            <circle cx="24" cy="13.5" r="2.2" fill="#fde68a"/>
+          </svg>
+        </div>
+      `;
+    }
+
     function playBeep(type = 'warning') {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -530,33 +545,30 @@
 
         if (type === 'warning') {
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(520, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.28);
+          osc.frequency.setValueAtTime(540, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(260, ctx.currentTime + 0.28);
           gain.gain.setValueAtTime(0.18, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
           osc.start();
           osc.stop(ctx.currentTime + 0.3);
         } else {
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(660, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-          gain.gain.setValueAtTime(0.12, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.16);
+          osc.frequency.setValueAtTime(680, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(920, ctx.currentTime + 0.14);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
           osc.start();
-          osc.stop(ctx.currentTime + 0.16);
+          osc.stop(ctx.currentTime + 0.15);
         }
-      } catch (e) {
-        // Abaikan jika browser memblokir autoplay audio
-      }
+      } catch (e) {}
     }
 
-    // Notifikasi Toast Mengambang
     function showToast(message, type = 'info') {
       const container = document.getElementById('toast-container');
       if (!container) return;
 
       const styles = {
-        success: 'bg-emerald-600 text-white border-emerald-500',
+        success: 'bg-[#047857] text-white border-emerald-500',
         error: 'bg-rose-600 text-white border-rose-500',
         warning: 'bg-amber-500 text-slate-950 border-amber-400',
         info: 'bg-slate-900 text-white border-slate-700'
@@ -579,49 +591,35 @@
       }, 3400);
     }
 
-    // Modal Konfirmasi & Input Custom (Pengganti alert() / confirm())
-    let customModalCallback = null;
-
-    function openCustomModal({ title, desc, confirmText = 'Ya, Lanjutkan', confirmColor = 'bg-indigo-600 hover:bg-indigo-700', showInput = false, inputPlaceholder = '', presets = [], onConfirm }) {
+    function openCustomModal({ title, desc, confirmText = 'Ya, Lanjutkan', confirmColor = 'bg-[#047857] hover:bg-emerald-800', bodyHtml = '', onConfirm }) {
       const modal = document.getElementById('custom-modal');
       document.getElementById('custom-modal-title').textContent = title;
       document.getElementById('custom-modal-desc').textContent = desc;
-      
+
+      const bodyEl = document.getElementById('custom-modal-body');
+      bodyEl.innerHTML = bodyHtml;
+      if (bodyHtml) {
+        bodyEl.classList.remove('hidden');
+      } else {
+        bodyEl.classList.add('hidden');
+      }
+
       const confirmBtn = document.getElementById('custom-modal-confirm');
       confirmBtn.textContent = confirmText;
       confirmBtn.className = `flex-1 py-2.5 rounded-xl text-white font-semibold text-sm transition shadow-sm ${confirmColor}`;
 
-      const inputWrap = document.getElementById('custom-modal-input-wrap');
-      const inputEl = document.getElementById('custom-modal-input');
-      const presetsEl = document.getElementById('custom-modal-presets');
-
-      if (showInput) {
-        inputWrap.classList.remove('hidden');
-        inputEl.value = '';
-        inputEl.placeholder = inputPlaceholder;
-        presetsEl.innerHTML = presets.map(p => `
-          <button type="button" onclick="document.getElementById('custom-modal-input').value='${escapeHtml(p)}'" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 text-xs font-medium transition">
-            + ${escapeHtml(p)}
-          </button>
-        `).join('');
-        setTimeout(() => inputEl.focus(), 60);
-      } else {
-        inputWrap.classList.add('hidden');
-      }
-
-      customModalCallback = () => {
-        const val = showInput ? inputEl.value.trim() : true;
-        closeCustomModal();
-        if (onConfirm) onConfirm(val);
+      confirmBtn.onclick = () => {
+        const shouldClose = onConfirm ? onConfirm() : true;
+        if (shouldClose !== false) {
+          closeCustomModal();
+        }
       };
 
-      confirmBtn.onclick = customModalCallback;
       modal.classList.remove('hidden');
     }
 
     function closeCustomModal() {
       document.getElementById('custom-modal').classList.add('hidden');
-      customModalCallback = null;
     }
 
     function escapeHtml(str) {
@@ -634,21 +632,28 @@
         .replace(/'/g, '&#039;');
     }
 
-    // Update Jam di Status Bar Mobile
+    function getLiveTimeString() {
+      const now = new Date();
+      return now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
     function updateMobileClock() {
       const el = document.getElementById('mobile-clock');
-      if (!el) return;
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      el.textContent = `${hh}:${mm}`;
+      if (el) {
+        const now = new Date();
+        el.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+      // Update watermark waktu hidup jika ujian aktif
+      if (examSession.active) {
+        updateWatermarkClock();
+      }
     }
-    setInterval(updateMobileClock, 10000);
+    setInterval(updateMobileClock, 1000);
     updateMobileClock();
 
     /**
      * ============================================================================
-     * FITUR 1: LOGIN MULTI-ROLE (SISWA & GURU / ADMIN)
+     * 1. MULTI-ROLE LOGIN SCREEN (MTs PN 2 KEEROM)
      * ============================================================================
      */
 
@@ -659,26 +664,27 @@
       return `
         <div id="main-scroll-area" class="flex-1 overflow-y-auto px-5 py-6 flex flex-col justify-between">
           <div>
-            <!-- Header Brand Aplikasi -->
+            <!-- Header Identitas MTs PN 2 KEEROM -->
             <div class="text-center mb-6">
-              <div class="w-16 h-16 rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/25 mb-3.5">
-                <svg class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
+              <div class="flex justify-center mb-3.5">
+                ${renderMadrasahEmblem('w-16 h-16', 'w-10 h-10')}
               </div>
-              <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">EduExam Shield</h1>
-              <p class="text-xs text-slate-500 mt-1">Aplikasi Ujian Anti-Nyontek &amp; Pengolah Nilai Mobile</p>
+              <span class="inline-block px-3 py-0.5 rounded-full bg-emerald-100 text-[#047857] text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                Kementerian Agama Kab. Keerom
+              </span>
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight">MTs PN 2 KEEROM</h1>
+              <p class="text-xs text-slate-500 mt-1 font-medium">Sistem Ujian CBT Mobile &amp; Pengolah Nilai</p>
             </div>
 
             <!-- Tab Switcher Peran -->
             <div class="bg-slate-200/80 p-1 rounded-2xl grid grid-cols-2 gap-1 mb-5">
-              <button type="button" onclick="switchLoginTab('student')" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 ${isStudent ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+              <button type="button" onclick="switchLoginTab('student')" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 ${isStudent ? 'bg-white text-[#047857] shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
                 Login Siswa
               </button>
-              <button type="button" onclick="switchLoginTab('admin')" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 ${!isStudent ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+              <button type="button" onclick="switchLoginTab('admin')" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 ${!isStudent ? 'bg-white text-[#047857] shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Guru / Admin
+                Login Guru / Admin
               </button>
             </div>
 
@@ -688,49 +694,51 @@
                 <div class="flex items-center justify-between mb-4">
                   <div>
                     <h2 class="text-base font-bold text-slate-900">Portal Peserta Ujian</h2>
-                    <p class="text-[11px] text-slate-500">Masukkan identitas dan token ujian aktif</p>
+                    <p class="text-[11px] text-slate-500">Isi identitas &amp; token ujian MTs PN 2 KEEROM</p>
                   </div>
-                  <button type="button" onclick="fillDemoStudent()" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold transition">
+                  <button type="button" onclick="fillDemoStudent()" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#047857] text-[11px] font-bold transition">
                     ⚡ Isi Akun Demo Siswa
                   </button>
                 </div>
 
                 <form onsubmit="handleStudentLogin(event)" class="space-y-3.5">
                   <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Siswa</label>
-                    <input id="stu-name" type="text" required placeholder="Contoh: Raka Aditya Pratama" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/60" />
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                    <input id="stu-name" type="text" required placeholder="Contoh: Muhammad Rizky Pratama" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
                   </div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">NIS / NISN</label>
-                      <input id="stu-nis" type="text" required placeholder="20260106" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/60" />
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">NISN</label>
+                      <input id="stu-nisn" type="text" required placeholder="0114829102" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
                     </div>
                     <div>
                       <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas</label>
-                      <input id="stu-kelas" type="text" required placeholder="XI IPA 1" value="${escapeHtml(appState.examConfig.targetClass)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/60" />
+                      <select id="stu-kelas" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60">
+                        ${CLASS_OPTIONS.map(k => `<option value="${k}" ${k === appState.examConfig.targetClass ? 'selected' : ''}>${k}</option>`).join('')}
+                      </select>
                     </div>
                   </div>
                   <div>
                     <div class="flex items-center justify-between mb-1">
                       <label class="text-xs font-semibold text-slate-700">Token Ujian</label>
-                      <span class="text-[11px] text-indigo-600 font-semibold">Token Aktif: <code class="bg-indigo-50 px-1.5 py-0.5 rounded">${escapeHtml(appState.examConfig.token)}</code></span>
+                      <span class="text-[11px] text-[#047857] font-semibold">Token: <code class="bg-emerald-50 px-1.5 py-0.5 rounded">${escapeHtml(appState.examConfig.token)}</code></span>
                     </div>
-                    <input id="stu-token" type="text" required placeholder="Masukkan Token Ujian" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/60" />
+                    <input id="stu-token" type="text" required value="UJIAN2026" placeholder="Masukkan Token Ujian" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
                   </div>
 
-                  <button type="submit" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition active:scale-[0.99] mt-2">
+                  <button type="submit" class="w-full py-3 rounded-2xl bg-gradient-to-r from-[#047857] to-emerald-600 hover:from-emerald-800 hover:to-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-900/20 transition active:scale-[0.99] mt-2">
                     Masuk ke Ruang Ujian →
                   </button>
                 </form>
               </div>
 
-              <!-- Info Ujian Aktif Saat Ini -->
+              <!-- Info Ujian Aktif -->
               <div class="mt-4 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
                 <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Paket Ujian Aktif</span>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Ujian Aktif Madrasah</span>
                   <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${activeMode.badgeBg}">${escapeHtml(activeMode.shortName)}</span>
                 </div>
-                <p class="text-xs font-bold text-slate-800 line-clamp-1">${escapeHtml(appState.examConfig.title)}</p>
+                <p class="text-xs font-bold text-slate-800 line-clamp-1">${escapeHtml(appState.examConfig.title)} — ${escapeHtml(appState.examConfig.subject)}</p>
                 <div class="flex items-center gap-3 text-[11px] text-slate-500 mt-1.5">
                   <span>📝 ${appState.questions.length} Soal</span>
                   <span>⏱️ ${appState.examConfig.durationMinutes} Menit</span>
@@ -743,25 +751,25 @@
                 <div class="flex items-center justify-between mb-4">
                   <div>
                     <h2 class="text-base font-bold text-slate-900">Portal Guru &amp; Admin</h2>
-                    <p class="text-[11px] text-slate-500">Kelola soal ujian, sheet nilai &amp; cetak Dafnil</p>
+                    <p class="text-[11px] text-slate-500">Kelola bank soal, sheet nilai &amp; cetak Dafnil</p>
                   </div>
-                  <button type="button" onclick="fillDemoAdmin()" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold transition">
-                    ⚡ Isi Akun Demo
+                  <button type="button" onclick="fillDemoAdmin()" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#047857] text-[11px] font-bold transition">
+                    ⚡ Isi Akun Demo Admin
                   </button>
                 </div>
 
                 <form onsubmit="handleAdminLogin(event)" class="space-y-3.5">
                   <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
-                    <input id="adm-user" type="text" required placeholder="admin" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/60" />
+                    <input id="adm-user" type="text" required value="admin" placeholder="admin" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-                    <input id="adm-pass" type="password" required placeholder="••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/60" />
+                    <input id="adm-pass" type="password" required value="123456" placeholder="••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
                   </div>
-                  <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/70 text-[11px] text-slate-600 flex items-center justify-between">
-                    <span>Kredensial Demo Bawaan:</span>
-                    <span class="font-mono font-bold text-slate-800">admin / 123456</span>
+                  <div class="bg-emerald-50/70 rounded-xl p-3 border border-emerald-200/70 text-[11px] text-slate-700 flex items-center justify-between">
+                    <span>Akun Default Guru/Admin:</span>
+                    <span class="font-mono font-bold text-[#047857]">admin / 123456</span>
                   </div>
                   <button type="submit" class="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-lg transition active:scale-[0.99]">
                     Masuk Dashboard Guru / Admin →
@@ -772,7 +780,7 @@
           </div>
 
           <div class="text-center pt-5 pb-1">
-            <p class="text-[11px] text-slate-400">EduExam Shield v2.6 • Proteksi Ujian &amp; Pengolah Nilai Terpadu</p>
+            <p class="text-[11px] text-slate-400 font-medium">MTs PN 2 KEEROM • Kab. Keerom, Papua</p>
           </div>
         </div>
       `;
@@ -785,47 +793,47 @@
     }
 
     function fillDemoStudent() {
-      const sampleNames = [
-        { name: 'Raka Aditya Pratama', nis: '20260106' },
-        { name: 'Nabila Zahra Khairunnisa', nis: '20260107' },
-        { name: 'Fajar Ramadhan', nis: '20260108' }
+      const demoStudents = [
+        { name: 'Muhammad Rizky Pratama', nisn: '0114829102', kelas: 'VIII-A' },
+        { name: 'Aisyah Nur Rahmah', nisn: '0114829101', kelas: 'VIII-A' },
+        { name: 'Nabila Khairunnisa', nisn: '0114829105', kelas: 'VII-A' }
       ];
-      const pick = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+      const pick = demoStudents[Math.floor(Math.random() * demoStudents.length)];
       document.getElementById('stu-name').value = pick.name;
-      document.getElementById('stu-nis').value = pick.nis;
-      document.getElementById('stu-kelas').value = appState.examConfig.targetClass;
+      document.getElementById('stu-nisn').value = pick.nisn;
+      document.getElementById('stu-kelas').value = pick.kelas;
       document.getElementById('stu-token').value = appState.examConfig.token;
-      showToast('Data demo siswa dan token aktif berhasil diisi!', 'info');
+      showToast(`Data demo siswa (${pick.name}) berhasil diisi!`, 'info');
     }
 
     function fillDemoAdmin() {
       document.getElementById('adm-user').value = 'admin';
       document.getElementById('adm-pass').value = '123456';
-      showToast('Kredensial demo Guru/Admin (admin / 123456) diisi.', 'info');
+      showToast('Kredensial demo Admin (admin / 123456) diisi.', 'info');
     }
 
     function handleStudentLogin(e) {
       e.preventDefault();
       const name = document.getElementById('stu-name').value.trim();
-      const nis = document.getElementById('stu-nis').value.trim();
-      const kelas = document.getElementById('stu-kelas').value.trim();
+      const nisn = document.getElementById('stu-nisn').value.trim();
+      const kelas = document.getElementById('stu-kelas').value;
       const token = document.getElementById('stu-token').value.trim().toUpperCase();
 
-      if (!name || !nis || !kelas || !token) {
-        showToast('Harap lengkapi semua kolom data siswa dan token!', 'error');
+      if (!name || !nisn || !kelas || !token) {
+        showToast('Harap lengkapi Nama Lengkap, NISN, Kelas, dan Token Ujian!', 'error');
         return;
       }
 
       if (token !== appState.examConfig.token.toUpperCase()) {
-        showToast(`Token ujian tidak valid! Gunakan token aktif: ${appState.examConfig.token}`, 'error');
+        showToast(`Token ujian salah! Gunakan token aktif: ${appState.examConfig.token}`, 'error');
         return;
       }
 
       appState.role = 'student';
       appState.studentStage = 'lobby';
-      appState.currentStudent = { name, nis, kelas, token };
+      appState.currentStudent = { name, nisn, kelas, token };
       saveState();
-      showToast(`Selamat datang, ${name}!`, 'success');
+      showToast(`Ahlan wa Sahlan, ${name}!`, 'success');
       renderApp();
     }
 
@@ -838,7 +846,7 @@
         appState.role = 'admin';
         appState.activeAdminTab = 'exam';
         saveState();
-        showToast('Berhasil masuk sebagai Guru / Admin!', 'success');
+        showToast('Berhasil masuk sebagai Guru / Admin MTs PN 2 KEEROM!', 'success');
         renderApp();
       } else {
         showToast('Username atau Password salah! Gunakan admin / 123456.', 'error');
@@ -857,8 +865,8 @@
 
     /**
      * ============================================================================
-     * FITUR 2, 4, 5, 6, 7: PORTAL SISWA (LOBI MODE UJIAN, RUANG UJIAN ANTI-NYONTEK,
-     * TIMER REAL-TIME, ANTI-SCREENSHOT, DAN HASIL NILAI LANGSUNG)
+     * 2, 4, 5. PORTAL SISWA: LOBI UJIAN, RUANG UJIAN ANTI-NYONTEK & ANTI-SCREENSHOT,
+     * WATERMARK DIAGONAL DINAMIS, DAN HASIL NILAI LANGSUNG
      * ============================================================================
      */
 
@@ -872,22 +880,22 @@
       return renderStudentLobby();
     }
 
-    // Lobi Siswa Sebelum Memulai Ujian
     function renderStudentLobby() {
       const cfg = appState.examConfig;
       const modeInfo = EXAM_MODES[cfg.mode] || EXAM_MODES.strict;
       const student = appState.currentStudent;
+      const effectiveMaxViolations = cfg.mode === 'strict' ? 2 : cfg.maxViolations;
 
       return `
-        <!-- Top Header Siswa -->
+        <!-- Header Siswa -->
         <div class="bg-white border-b border-slate-200 px-5 py-3.5 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-bold text-sm flex items-center justify-center">
+            <div class="w-9 h-9 rounded-xl bg-[#047857] text-white font-bold text-sm flex items-center justify-center">
               ${escapeHtml(student.name.charAt(0).toUpperCase())}
             </div>
             <div>
               <p class="text-xs font-bold text-slate-900 leading-tight">${escapeHtml(student.name)}</p>
-              <p class="text-[11px] text-slate-500">NIS: ${escapeHtml(student.nis)} • ${escapeHtml(student.kelas)}</p>
+              <p class="text-[11px] text-slate-500">NISN: ${escapeHtml(student.nisn)} • Kelas ${escapeHtml(student.kelas)}</p>
             </div>
           </div>
           <button onclick="logoutApp()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-semibold transition">
@@ -896,16 +904,17 @@
         </div>
 
         <div id="main-scroll-area" class="flex-1 overflow-y-auto p-5 space-y-4">
-          <!-- Kartu Detail Paket Ujian -->
-          <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden">
+          <!-- Kartu Identitas Ujian Madrasah -->
+          <div class="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden">
             <div class="flex items-center justify-between mb-3">
-              <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-white/15 border border-white/20 backdrop-blur-xs">
+              <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">
                 ${escapeHtml(modeInfo.name)}
               </span>
-              <span class="text-xs font-mono text-indigo-300">#${escapeHtml(cfg.token)}</span>
+              <span class="text-xs font-mono text-emerald-300">#${escapeHtml(cfg.token)}</span>
             </div>
-            <h2 class="text-lg font-extrabold leading-snug mb-1.5">${escapeHtml(cfg.title)}</h2>
-            <p class="text-xs text-slate-300 mb-4">${escapeHtml(cfg.subject)} • Kelas Target: ${escapeHtml(cfg.targetClass)}</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-0.5">MTs PN 2 KEEROM</p>
+            <h2 class="text-lg font-extrabold leading-snug mb-1">${escapeHtml(cfg.title)}</h2>
+            <p class="text-xs text-slate-300 mb-4">Mata Pelajaran: <strong>${escapeHtml(cfg.subject)}</strong></p>
 
             <div class="grid grid-cols-3 gap-2 bg-white/10 rounded-2xl p-3 text-center">
               <div>
@@ -923,33 +932,33 @@
             </div>
           </div>
 
-          <!-- Karakteristik Mode Ujian Aktif -->
+          <!-- Detail Mode Ujian yang Sedang Aktif -->
           <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Aturan Mode Ujian Aktif</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Karakteristik Mode Ujian Aktif</h3>
             <p class="text-xs text-slate-600 leading-relaxed mb-3">${escapeHtml(modeInfo.description)}</p>
             <div class="flex flex-wrap gap-1.5">
               ${modeInfo.features.map(f => `
-                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-[11px] font-semibold">✓ ${escapeHtml(f)}</span>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#047857] text-[11px] font-semibold">✓ ${escapeHtml(f)}</span>
               `).join('')}
             </div>
           </div>
 
-          <!-- Peringatan Sistem Anti-Nyontek & Kunci Layar -->
+          <!-- Tata Tertib Anti-Nyontek & Kunci Layar -->
           <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
             <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
               <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
               </svg>
-              <span>Sistem Proteksi Anti-Nyontek &amp; Anti-Screenshot</span>
+              <span>Proteksi Anti-Nyontek &amp; Watermark Identitas Aktif</span>
             </div>
             <ul class="text-[11px] text-amber-800 space-y-1 pl-4 list-disc">
-              <li>Urutan soal &amp; opsi jawaban diacak otomatis untuk setiap peserta.</li>
-              <li>Dilarang pindah tab, keluar aplikasi, split-screen, atau menekan tombol Screenshot.</li>
-              <li>Batas maksimal pelanggaran: <strong>${cfg.maxViolations} kali</strong> (otomatis dikunci &amp; disubmit jika terlampaui).</li>
+              <li>Layar ujian dilindungi watermark identitas (<strong>${escapeHtml(student.name)} — ${escapeHtml(student.nisn)}</strong>).</li>
+              <li>Pindah tab, keluar aplikasi, atau menekan Screenshot akan langsung mengunci layar hitam.</li>
+              <li>Batas maksimal pelanggaran: <strong>${effectiveMaxViolations} kali</strong> sebelum ujian dikumpulkan otomatis.</li>
             </ul>
           </div>
 
-          <button onclick="startExamSession()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition active:scale-[0.99] flex items-center justify-center gap-2">
+          <button onclick="startExamSession()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#047857] to-emerald-600 hover:from-emerald-800 hover:to-emerald-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-900/20 transition active:scale-[0.99] flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Mulai Kerjakan Ujian Sekarang
           </button>
@@ -957,7 +966,6 @@
       `;
     }
 
-    // Algoritma Pengacakan Fisher-Yates
     function shuffleArray(arr) {
       const copy = [...arr];
       for (let i = copy.length - 1; i > 0; i--) {
@@ -967,17 +975,15 @@
       return copy;
     }
 
-    // Memulai Sesi Ujian & Mengaktifkan Mesin Anti-Nyontek
     function startExamSession() {
       if (!appState.questions || appState.questions.length === 0) {
-        showToast('Belum ada soal tersedia pada paket ujian ini!', 'error');
+        showToast('Belum ada soal tersedia pada bank soal ujian!', 'error');
         return;
       }
 
       const cfg = appState.examConfig;
       const shouldShuffleOptions = cfg.mode === 'strict' || cfg.mode === 'cat' || cfg.mode === 'remedial';
 
-      // Acak urutan soal dan opsi jawaban sambil menjaga referensi kunci benar
       const shuffledQuestions = shuffleArray(appState.questions).map((q, idx) => {
         const rawOptions = [
           { origKey: 'A', text: q.opsi_a },
@@ -1022,11 +1028,9 @@
         violationLogs: [],
         lastViolationTime: 0,
         initialWidth: window.innerWidth,
-        initialHeight: window.innerHeight,
-        curtainTimer: null
+        initialHeight: window.innerHeight
       };
 
-      // Coba masuk layar penuh pada mode ketat UTS/UAS
       if (cfg.mode === 'strict' && document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(() => {});
       }
@@ -1037,7 +1041,11 @@
       attachExamSecurityListeners();
     }
 
-    // Timer Ujian Real-Time
+    function getEffectiveMaxViolations() {
+      const cfg = appState.examConfig;
+      return cfg.mode === 'strict' ? 2 : (Number(cfg.maxViolations) || 3);
+    }
+
     function startExamTimer() {
       if (examSession.timerInterval) clearInterval(examSession.timerInterval);
 
@@ -1052,7 +1060,7 @@
 
         if (examSession.remainingSeconds <= 0) {
           clearInterval(examSession.timerInterval);
-          showToast('Waktu ujian telah habis! Jawaban dikumpulkan otomatis.', 'warning');
+          showToast('Waktu ujian habis! Jawaban dikumpulkan otomatis.', 'warning');
           finishExam(false, 'Waktu Habis (Auto-Submit)');
         }
       }, 1000);
@@ -1076,11 +1084,11 @@
       const pct = Math.max(0, Math.min(100, (rem / examSession.totalSeconds) * 100));
       timerBar.style.width = `${pct}%`;
 
-      // Ubah warna saat < 2 menit (kuning) dan < 30 detik (merah berkedip)
-      if (rem < 30) {
+      // Amber < 5 menit (300 detik), Red Pulse < 1 menit (60 detik)
+      if (rem < 60) {
         timerBadge.className = 'px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-600 text-white animate-pulse shadow-xs';
         timerBar.className = 'h-full bg-rose-500 transition-all duration-500';
-      } else if (rem < 120) {
+      } else if (rem < 300) {
         timerBadge.className = 'px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-400 text-slate-950 shadow-xs';
         timerBar.className = 'h-full bg-amber-400 transition-all duration-500';
       } else {
@@ -1089,8 +1097,19 @@
       }
     }
 
+    function updateWatermarkClock() {
+      const wmContainer = document.getElementById('exam-watermark-grid');
+      if (!wmContainer || !appState.currentStudent) return;
+      const st = appState.currentStudent;
+      const text = `MTs PN 2 KEEROM • ${st.name} • ${st.nisn} • ${getLiveTimeString()}`;
+      const items = wmContainer.querySelectorAll('.watermark-item');
+      items.forEach(el => {
+        el.textContent = text;
+      });
+    }
+
     /**
-     * MESIN ANTI-NYONTEK & KUNCI LAYAR ANTI-SCREENSHOT
+     * SISTEM PROTEKSI ANTI-NYONTEK & TIRAI KUNCI LAYAR ANTI-SCREENSHOT
      */
     function attachExamSecurityListeners() {
       document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -1107,7 +1126,6 @@
     function stopExamSecurity() {
       examSession.active = false;
       if (examSession.timerInterval) clearInterval(examSession.timerInterval);
-      if (examSession.curtainTimer) clearInterval(examSession.curtainTimer);
 
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
@@ -1120,31 +1138,24 @@
       document.removeEventListener('keyup', handleSecurityKeyup);
 
       document.getElementById('screenshot-curtain')?.classList.add('hidden');
-      document.getElementById('violation-modal')?.classList.add('hidden');
-
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
     }
 
     function blockCheatEvent(e) {
       if (!examSession.active) return;
       e.preventDefault();
-      showToast('Aksi salin, tempel, atau klik kanan diblokir sistem keamanan!', 'warning');
+      showToast('Aksi klik kanan, salin, atau tempel diblokir sistem keamanan!', 'warning');
     }
 
     function handleVisibilityChange() {
       if (!examSession.active) return;
       if (document.hidden) {
-        triggerScreenshotCurtain('Terdeteksi keluar aplikasi atau berpindah tab peramban.');
-        recordViolation('Keluar aplikasi / pindah tab terdeteksi');
+        triggerSecurityLockAndViolation('Terdeteksi keluar aplikasi atau berpindah tab peramban.');
       }
     }
 
     function handleWindowBlur() {
       if (!examSession.active) return;
-      triggerScreenshotCurtain('Layar ujian kehilangan fokus (membuka aplikasi lain / notifikasi melayang).');
-      recordViolation('Kehilangan fokus layar ujian');
+      triggerSecurityLockAndViolation('Layar ujian kehilangan fokus (membuka aplikasi lain atau jendela melayang).');
     }
 
     function handleWindowResize() {
@@ -1152,7 +1163,7 @@
       const wDiff = Math.abs(window.innerWidth - examSession.initialWidth) / examSession.initialWidth;
       const hShrink = (examSession.initialHeight - window.innerHeight) / examSession.initialHeight;
       if (wDiff > 0.18 || hShrink > 0.42) {
-        recordViolation('Perubahan ukuran layar mendadak (Split-Screen / Floating Window)');
+        triggerSecurityLockAndViolation('Terdeteksi perubahan ukuran layar mendadak (Split-Screen / Floating Window).');
       }
     }
 
@@ -1160,19 +1171,16 @@
       if (!examSession.active) return;
       const key = e.key.toLowerCase();
 
-      // Deteksi Screenshot & Print
       if (
         e.key === 'PrintScreen' ||
         ((e.ctrlKey || e.metaKey) && (key === 'p' || key === 's')) ||
         ((e.ctrlKey || e.metaKey) && e.shiftKey && (key === 's' || key === '3' || key === '4' || key === '5'))
       ) {
         e.preventDefault();
-        triggerScreenshotCurtain('Kombinasi tombol Screenshot / Cetak Layar terdeteksi!');
-        recordViolation('Percobaan mengambil Screenshot / Print layar');
+        triggerSecurityLockAndViolation('Kombinasi tombol Screenshot / Cetak Layar terdeteksi!');
         return;
       }
 
-      // Blokir DevTools & Copy-Paste Shortcut
       if (
         e.key === 'F12' ||
         ((e.ctrlKey || e.metaKey) && e.shiftKey && (key === 'i' || key === 'j' || key === 'c')) ||
@@ -1186,79 +1194,55 @@
     function handleSecurityKeyup(e) {
       if (!examSession.active) return;
       if (e.key === 'PrintScreen') {
-        triggerScreenshotCurtain('Tombol PrintScreen terdeteksi!');
-        recordViolation('Percobaan menekan tombol PrintScreen');
+        triggerSecurityLockAndViolation('Tombol PrintScreen terdeteksi!');
       }
     }
 
-    // Aktifkan Tirai Kunci Layar Anti-Screenshot selama 4 detik
-    function triggerScreenshotCurtain(reason) {
-      const curtain = document.getElementById('screenshot-curtain');
-      const reasonEl = document.getElementById('curtain-reason');
-      const countEl = document.getElementById('curtain-countdown');
-      if (!curtain) return;
-
-      reasonEl.textContent = reason;
-      curtain.classList.remove('hidden');
-      playBeep('warning');
-
-      let sec = 4;
-      countEl.textContent = `${sec} detik`;
-      if (examSession.curtainTimer) clearInterval(examSession.curtainTimer);
-
-      examSession.curtainTimer = setInterval(() => {
-        sec -= 1;
-        if (sec <= 0) {
-          clearInterval(examSession.curtainTimer);
-          curtain.classList.add('hidden');
-        } else {
-          countEl.textContent = `${sec} detik`;
-        }
-      }, 1000);
-    }
-
-    // Tombol Simulasi Uji Anti-Screenshot di Ruang Ujian
-    function simulateScreenshotAttempt() {
-      if (!examSession.active) return;
-      triggerScreenshotCurtain('Simulasi Deteksi Screenshot: Sistem langsung mengunci tampilan soal!');
-      recordViolation('Uji deteksi Screenshot / Perekaman Layar');
-    }
-
-    // Catat Pelanggaran dengan Debounce agar tidak ganda dalam 1.2 detik
-    function recordViolation(reason) {
+    function triggerSecurityLockAndViolation(reason) {
       if (!examSession.active) return;
       const now = Date.now();
       if (now - examSession.lastViolationTime < 1200) return;
       examSession.lastViolationTime = now;
 
       examSession.violations += 1;
-      const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const maxV = getEffectiveMaxViolations();
+      const timeStr = getLiveTimeString();
       examSession.violationLogs.push(`[${timeStr}] ${reason}`);
 
-      const maxV = appState.examConfig.maxViolations;
-
-      // Update badge pelanggaran di header ujian
       const badgeEl = document.getElementById('exam-violation-counter');
       if (badgeEl) {
         badgeEl.textContent = `Pelanggaran: ${examSession.violations}/${maxV}`;
       }
 
-      // Cek apakah mencapai batas maksimal pelanggaran
+      playBeep('warning');
+
+      // Jika pelanggaran mencapai batas maksimal -> auto-submit segera
       if (examSession.violations >= maxV) {
-        showToast('Batas pelanggaran terlampaui! Ujian dikunci otomatis.', 'error');
-        finishExam(true, 'Terindikasi Pelanggaran');
+        showToast(`Batas ${maxV} pelanggaran tercapai! Ujian dikumpulkan otomatis.`, 'error');
+        finishExam(true, 'Terindikasi Pelanggaran (Auto-Submit)');
         return;
       }
 
-      // Tampilkan modal peringatan merah
-      const modal = document.getElementById('violation-modal');
-      document.getElementById('violation-badge').textContent = `Pelanggaran ke-${examSession.violations} dari ${maxV}`;
-      document.getElementById('violation-reason-text').textContent = reason;
-      modal.classList.remove('hidden');
+      // Aktifkan tirai kunci layar hitam penuh dengan tombol "Buka Kunci & Lanjutkan Ujian"
+      const curtain = document.getElementById('screenshot-curtain');
+      const reasonEl = document.getElementById('curtain-reason');
+      const statusEl = document.getElementById('curtain-violation-status');
+
+      if (curtain && reasonEl && statusEl) {
+        reasonEl.textContent = reason;
+        statusEl.textContent = `Pelanggaran ke-${examSession.violations} dari ${maxV} (Sisa toleransi: ${maxV - examSession.violations}x)`;
+        curtain.classList.remove('hidden');
+      }
     }
 
-    function closeViolationModal() {
-      document.getElementById('violation-modal').classList.add('hidden');
+    function unlockScreenshotCurtain() {
+      document.getElementById('screenshot-curtain')?.classList.add('hidden');
+      showToast('Layar ujian dibuka kembali. Harap tetap fokus pada halaman ujian.', 'info');
+    }
+
+    function simulateScreenshotAttempt() {
+      if (!examSession.active) return;
+      triggerSecurityLockAndViolation('Simulasi Uji Anti-Screenshot: Sistem langsung mengunci layar soal!');
     }
 
     function requestExamFullscreen() {
@@ -1269,10 +1253,11 @@
       }
     }
 
-    // Render Ruang Ujian Siswa
     function renderStudentExamRoom() {
       const cfg = appState.examConfig;
       const modeInfo = EXAM_MODES[cfg.mode] || EXAM_MODES.strict;
+      const student = appState.currentStudent;
+      const maxV = getEffectiveMaxViolations();
       const q = examSession.questions[examSession.currentIndex];
       const totalQ = examSession.questions.length;
       const selectedAns = examSession.answers[q.id] || null;
@@ -1280,17 +1265,23 @@
       const isDoubt = !!examSession.doubts[q.id];
       const answeredCount = Object.keys(examSession.answers).length;
 
+      const wmText = `MTs PN 2 KEEROM • ${student.name} • ${student.nisn} • ${getLiveTimeString()}`;
+      const wmItemsHtml = Array.from({ length: 24 }).map(() => `<span class="watermark-item">${escapeHtml(wmText)}</span>`).join('');
+
       return `
-        <!-- Header Keamanan & Timer Ujian -->
-        <div class="bg-slate-900 text-white px-4 pt-3 pb-2.5 shrink-0 no-select">
+        <!-- Sticky Top Exam Bar -->
+        <div class="bg-slate-900 text-white px-4 pt-3 pb-2.5 shrink-0 no-select z-30">
           <div class="flex items-center justify-between gap-2 mb-2">
             <div class="flex items-center gap-1.5 min-w-0">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
-              <span class="text-[11px] font-bold text-emerald-300 truncate">Kunci Layar &amp; Anti-Screenshot Aktif</span>
+              <span class="text-xs font-black tracking-tight text-white truncate">MTs PN 2 KEEROM</span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-[10px] font-bold shrink-0">
+                ${escapeHtml(modeInfo.shortName)}
+              </span>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               <span id="exam-violation-counter" class="px-2 py-0.5 rounded-lg bg-rose-500/20 border border-rose-400/40 text-rose-200 text-[10px] font-bold">
-                Pelanggaran: ${examSession.violations}/${cfg.maxViolations}
+                Pelanggaran: ${examSession.violations}/${maxV}
               </span>
               <div id="exam-timer-badge" class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                 ${formatTimeMMSS(examSession.remainingSeconds)}
@@ -1303,30 +1294,35 @@
             <div id="exam-timer-bar" class="h-full bg-emerald-400 transition-all duration-500" style="width: ${(examSession.remainingSeconds / examSession.totalSeconds) * 100}%"></div>
           </div>
 
-          <!-- Bar Aksi Keamanan Cepat -->
+          <!-- Bar Kontrol Keamanan -->
           <div class="flex items-center justify-between text-[10px] text-slate-300">
-            <span>Mode: <strong class="text-white">${escapeHtml(modeInfo.shortName)}</strong> • Terjawab ${answeredCount}/${totalQ}</span>
+            <span>Terjawab: <strong class="text-white">${answeredCount}/${totalQ}</strong> • ${escapeHtml(student.kelas)}</span>
             <div class="flex items-center gap-1.5">
               <button type="button" onclick="requestExamFullscreen()" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
                 ⛶ Layar Penuh
               </button>
-              <button type="button" onclick="simulateScreenshotAttempt()" class="px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 text-rose-200 border border-rose-800">
+              <button type="button" onclick="simulateScreenshotAttempt()" class="px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 text-rose-200 border border-rose-800 font-semibold">
                 🛡️ Uji Anti-Screenshot
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Area Soal Utama (Anti-Seleksi Teks) -->
-        <div id="main-scroll-area" class="flex-1 overflow-y-auto p-4 space-y-4 no-select">
+        <!-- Area Soal dengan Watermark Diagonal Dinamis -->
+        <div id="main-scroll-area" class="flex-1 overflow-y-auto p-4 space-y-4 no-select relative">
           
-          <!-- Strip Navigasi Nomor Soal (Khusus Mode CAT selalu terbuka, mode lain ringkas) -->
-          <div class="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-xs">
+          <!-- Overlay Watermark Keamanan Diagonal -->
+          <div id="exam-watermark-grid" class="watermark-grid" aria-hidden="true">
+            ${wmItemsHtml}
+          </div>
+
+          <!-- Navigasi Nomor Soal (Interaktif CAT & Semua Mode) -->
+          <div class="bg-white/95 backdrop-blur-xs rounded-2xl p-3 border border-slate-200/80 shadow-xs relative z-10">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[11px] font-bold text-slate-500">Navigasi Nomor Soal</span>
+              <span class="text-[11px] font-bold text-slate-600">Navigasi Nomor Soal</span>
               <div class="flex items-center gap-2 text-[10px] text-slate-500">
-                <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></i>Dijawab</span>
-                ${cfg.mode === 'cat' ? `<span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-amber-400 inline-block"></i>Ragu</span>` : ''}
+                <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-[#047857] inline-block"></i>Dijawab</span>
+                ${cfg.mode === 'cat' ? `<span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-amber-400 inline-block"></i>Ragu-Ragu</span>` : ''}
                 <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-slate-200 inline-block"></i>Kosong</span>
               </div>
             </div>
@@ -1340,10 +1336,10 @@
                 if (hasDoubt && cfg.mode === 'cat') {
                   pillClass = 'bg-amber-400 text-slate-950 border-amber-500 font-bold';
                 } else if (hasAns) {
-                  pillClass = 'bg-emerald-500 text-white border-emerald-600 font-bold';
+                  pillClass = 'bg-[#047857] text-white border-emerald-700 font-bold';
                 }
                 if (isCurr) {
-                  pillClass += ' ring-2 ring-indigo-600 ring-offset-1';
+                  pillClass += ' ring-2 ring-slate-900 ring-offset-1';
                 }
 
                 return `
@@ -1355,10 +1351,10 @@
             </div>
           </div>
 
-          <!-- Kartu Pertanyaan -->
-          <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-card">
+          <!-- Kartu Soal & Opsi Jawaban -->
+          <div class="bg-white/95 backdrop-blur-xs rounded-3xl p-5 border border-slate-200/80 shadow-card relative z-10">
             <div class="flex items-center justify-between mb-3">
-              <span class="px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-extrabold">
+              <span class="px-3 py-1 rounded-xl bg-emerald-50 text-[#047857] text-xs font-extrabold">
                 Soal No. ${examSession.currentIndex + 1} dari ${totalQ}
               </span>
               <span class="text-[11px] font-semibold text-slate-400">Bobot: ${q.bobot} Poin</span>
@@ -1368,27 +1364,25 @@
               ${escapeHtml(q.pertanyaan)}
             </p>
 
-            <!-- Opsi Jawaban A / B / C / D -->
             <div class="space-y-2.5">
               ${q.options.map(opt => {
                 const isSelected = selectedAns === opt.displayKey;
                 const isCorrectOpt = opt.displayKey === q.correctDisplayKey;
 
-                let cardStyle = 'border-slate-200 bg-slate-50/70 hover:bg-indigo-50/50 hover:border-indigo-300 text-slate-800';
+                let cardStyle = 'border-slate-200 bg-slate-50/70 hover:bg-emerald-50/50 hover:border-emerald-300 text-slate-800';
                 let circleStyle = 'bg-white border-slate-300 text-slate-700';
 
                 if (isLockedQuiz) {
-                  // Feedback langsung pada Mode 1: Ujian Harian / Kuis Cepat
                   if (isCorrectOpt) {
-                    cardStyle = 'border-emerald-500 bg-emerald-50 text-emerald-950 font-semibold';
-                    circleStyle = 'bg-emerald-600 border-emerald-600 text-white';
+                    cardStyle = 'border-emerald-600 bg-emerald-50 text-emerald-950 font-semibold';
+                    circleStyle = 'bg-[#047857] border-[#047857] text-white';
                   } else if (isSelected && !isCorrectOpt) {
                     cardStyle = 'border-rose-500 bg-rose-50 text-rose-950';
                     circleStyle = 'bg-rose-600 border-rose-600 text-white';
                   }
                 } else if (isSelected) {
-                  cardStyle = 'border-indigo-600 bg-indigo-50/90 text-indigo-950 font-semibold shadow-xs';
-                  circleStyle = 'bg-indigo-600 border-indigo-600 text-white';
+                  cardStyle = 'border-[#047857] bg-emerald-50/90 text-emerald-950 font-semibold shadow-xs';
+                  circleStyle = 'bg-[#047857] border-[#047857] text-white';
                 }
 
                 return `
@@ -1402,46 +1396,46 @@
               }).join('')}
             </div>
 
-            <!-- Feedback Langsung Khusus Mode 1 (Kuis Cepat) -->
+            <!-- Feedback Langsung (Khusus Mode 1: Ujian Harian / Kuis Cepat) -->
             ${isLockedQuiz ? `
               <div class="mt-4 p-3.5 rounded-2xl border ${selectedAns === q.correctDisplayKey ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'}">
                 <p class="text-xs font-extrabold mb-1">
                   ${selectedAns === q.correctDisplayKey ? '✓ Jawaban Anda Benar!' : `✕ Kurang Tepat! Kunci Jawaban: ${q.correctDisplayKey}`}
                 </p>
-                <p class="text-[11px] leading-relaxed opacity-90">${escapeHtml(q.pembahasan || 'Pembahasan tercatat pada sistem.')}</p>
+                <p class="text-[11px] leading-relaxed opacity-90">${escapeHtml(q.pembahasan || 'Kunci jawaban sesuai pedoman evaluasi madrasah.')}</p>
               </div>
             ` : ''}
 
-            <!-- Tombol Ragu-Ragu Khusus Mode 3 (Simulasi CAT) -->
+            <!-- Tombol Bendera Kuning Ragu-Ragu (Khusus Mode 3: Try Out / Simulasi CAT) -->
             ${cfg.mode === 'cat' ? `
               <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                 <span class="text-[11px] text-slate-500">Penanda Simulasi CAT:</span>
                 <button type="button" onclick="toggleQuestionDoubt('${q.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition ${isDoubt ? 'bg-amber-400 border-amber-500 text-slate-950' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-amber-50'}">
-                  ${isDoubt ? '★ Ditandai Ragu-Ragu' : '☆ Tandai Ragu-Ragu'}
+                  ${isDoubt ? '🚩 Ditandai Ragu-Ragu' : '🏳️ Tandai Ragu-Ragu'}
                 </button>
               </div>
             ` : ''}
           </div>
         </div>
 
-        <!-- Footer Navigasi Soal & Kumpulkan -->
-        <div class="bg-white border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-2 shrink-0 no-select">
+        <!-- Footer Navigasi Soal -->
+        <div class="bg-white border-t border-slate-200 px-4 py-3 flex items-center justify-between gap-2 shrink-0 no-select z-30">
           <button type="button" onclick="prevQuestion()" ${examSession.currentIndex === 0 ? 'disabled' : ''} class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs disabled:opacity-40 hover:bg-slate-50 transition">
             ← Sebelumnya
           </button>
 
           ${examSession.currentIndex < totalQ - 1 ? `
-            <button type="button" onclick="nextQuestion()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition">
+            <button type="button" onclick="nextQuestion()" class="flex-1 py-2.5 rounded-xl bg-[#047857] hover:bg-emerald-800 text-white font-bold text-xs shadow-sm transition">
               Soal Berikutnya →
             </button>
           ` : `
-            <button type="button" onclick="confirmSubmitExam()" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition">
+            <button type="button" onclick="confirmSubmitExam()" class="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition">
               ✓ Selesai &amp; Kumpulkan
             </button>
           `}
 
           ${examSession.currentIndex < totalQ - 1 ? `
-            <button type="button" onclick="confirmSubmitExam()" class="px-3 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs transition">
+            <button type="button" onclick="confirmSubmitExam()" class="px-3 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#047857] border border-emerald-200 font-bold text-xs transition">
               Selesai
             </button>
           ` : ''}
@@ -1452,7 +1446,7 @@
     function selectAnswer(questionId, displayKey) {
       const cfg = appState.examConfig;
       if (cfg.mode === 'quiz' && examSession.lockedQuestions[questionId]) {
-        showToast('Pada mode Kuis Cepat, jawaban yang sudah dikunci tidak dapat diubah.', 'info');
+        showToast('Pada mode Ujian Harian / Kuis Cepat, jawaban yang dikunci tidak dapat diubah.', 'info');
         return;
       }
 
@@ -1496,16 +1490,16 @@
       openCustomModal({
         title: 'Kumpulkan Jawaban Ujian?',
         desc: unanswered > 0
-          ? `Masih ada ${unanswered} soal yang belum dijawab (${answered}/${totalQ} terjawab). Yakin ingin mengakhiri ujian sekarang?`
-          : `Seluruh ${totalQ} soal telah dijawab. Klik kumpulkan untuk melihat hasil nilai Anda sekarang.`,
-        confirmText: 'Ya, Kumpulkan Sekarang',
-        confirmColor: 'bg-emerald-600 hover:bg-emerald-700',
+          ? `Masih ada ${unanswered} soal belum dijawab (${answered}/${totalQ} terjawab). Yakin mengakhiri ujian sekarang?`
+          : `Seluruh ${totalQ} soal telah dijawab. Klik kumpulkan untuk melihat hasil nilai akhir Anda.`,
+        confirmText: 'Ya, Kumpulkan Ujian',
+        confirmColor: 'bg-[#047857] hover:bg-emerald-800',
         onConfirm: () => finishExam(false, 'Selesai Normal')
       });
     }
 
     /**
-     * FITUR 7: PERHITUNGAN HASIL NILAI & SINKRONISASI OTOMATIS KE SHEET NILAI
+     * 5. HASIL NILAI MUNCUL SAAT SELESAI & OTOMATIS MASUK KE SHEET NILAI
      */
     function finishExam(forcedByViolation = false, statusReason = 'Selesai Normal') {
       const usedSeconds = Math.max(1, examSession.totalSeconds - Math.max(0, examSession.remainingSeconds));
@@ -1562,6 +1556,7 @@
       const resultObj = {
         student: { ...appState.currentStudent },
         examTitle: appState.examConfig.title,
+        subject: appState.examConfig.subject,
         modeName: (EXAM_MODES[appState.examConfig.mode] || EXAM_MODES.strict).name,
         score: finalScore,
         kkm,
@@ -1586,20 +1581,16 @@
       renderApp();
     }
 
-    // Sinkronkan Nilai Siswa ke Sheet Nilai Guru/Admin secara otomatis
     function syncResultToGradeSheet(result) {
       if (!appState.scoreColumns || appState.scoreColumns.length === 0) {
-        appState.scoreColumns = [{ id: 'col_ujian', label: 'Ujian Aktif' }];
+        appState.scoreColumns = [{ id: 'col_uas', label: 'UAS' }];
       }
 
-      // Gunakan kolom 'col_ujian' jika ada, atau kolom terakhir pada sheet nilai
-      let targetCol = appState.scoreColumns.find(c => c.id === 'col_ujian');
-      if (!targetCol) {
-        targetCol = appState.scoreColumns[appState.scoreColumns.length - 1];
-      }
+      // Gunakan kolom terakhir pada Sheet Nilai sebagai kolom ujian aktif
+      const targetCol = appState.scoreColumns[appState.scoreColumns.length - 1];
 
       const existingIdx = appState.studentsData.findIndex(
-        s => s.nis.toLowerCase() === result.student.nis.toLowerCase() ||
+        s => s.nisn.toLowerCase() === result.student.nisn.toLowerCase() ||
              s.name.toLowerCase() === result.student.name.toLowerCase()
       );
 
@@ -1618,16 +1609,19 @@
         });
         appState.studentsData.push({
           id: 'st_' + Date.now(),
-          nis: result.student.nis,
+          nisn: result.student.nisn,
           name: result.student.name,
           kelas: result.student.kelas,
           scores: newScores,
           note: noteText
         });
       }
+
+      // Otomatis arahkan filter Dafnil ke kelas siswa agar langsung terlihat jika dicetak
+      appState.dafnilFilterClass = result.student.kelas;
+      appState.dafnilFilterSubject = appState.examConfig.subject;
     }
 
-    // Tampilan Kartu Hasil Nilai Saat Selesai
     function renderStudentResultView() {
       const res = appState.lastExamResult;
       if (!res) {
@@ -1636,52 +1630,49 @@
       }
 
       let statusBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      let statusLabel = 'LULUS KKM (TUNTAS)';
-      let ringColor = 'text-emerald-500';
+      let statusLabel = 'TUNTAS (LULUS KKM)';
+      let ringColor = 'text-[#047857]';
 
       if (res.forcedByViolation) {
         statusBadgeClass = 'bg-rose-100 text-rose-800 border-rose-200';
         statusLabel = 'TERINDIKASI PELANGGARAN';
-        ringColor = 'text-rose-500';
+        ringColor = 'text-rose-600';
       } else if (!res.isPassed) {
         statusBadgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
-        statusLabel = 'REMEDIAL / BELUM TUNTAS';
-        ringColor = 'text-amber-500';
+        statusLabel = 'REMEDIAL (BELUM TUNTAS)';
+        ringColor = 'text-amber-600';
       }
 
       return `
         <!-- Header Hasil -->
         <div class="bg-white border-b border-slate-200 px-5 py-3.5 flex items-center justify-between shrink-0">
           <div>
-            <h2 class="text-sm font-extrabold text-slate-900">Hasil Evaluasi Ujian</h2>
-            <p class="text-[11px] text-slate-500">${escapeHtml(res.student.name)} • ${escapeHtml(res.student.kelas)}</p>
+            <h2 class="text-sm font-extrabold text-slate-900">Hasil Ujian — MTs PN 2 KEEROM</h2>
+            <p class="text-[11px] text-slate-500">${escapeHtml(res.student.name)} (${escapeHtml(res.student.nisn)}) • ${escapeHtml(res.student.kelas)}</p>
           </div>
           <button onclick="logoutApp()" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
-            Selesai &amp; Keluar
+            Selesai
           </button>
         </div>
 
         <div id="main-scroll-area" class="flex-1 overflow-y-auto p-5 space-y-4">
-          <!-- Kartu Skor Utama -->
           <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-card text-center">
             <span class="inline-block px-3.5 py-1 rounded-full text-xs font-extrabold border mb-4 ${statusBadgeClass}">
               ${statusLabel}
             </span>
 
-            <!-- Lingkaran Nilai Akhir -->
-            <div class="w-32 h-32 rounded-full border-8 border-slate-100 flex flex-col items-center justify-center mx-auto mb-3 relative">
+            <div class="w-32 h-32 rounded-full border-8 border-emerald-50 flex flex-col items-center justify-center mx-auto mb-3">
               <span class="text-4xl font-black tracking-tight ${ringColor}">${res.score}</span>
-              <span class="text-[10px] font-bold uppercase text-slate-400">Skor Akhir</span>
+              <span class="text-[10px] font-bold uppercase text-slate-400">Nilai Akhir</span>
             </div>
 
-            <p class="text-xs font-semibold text-slate-700 mb-1">${escapeHtml(res.examTitle)}</p>
-            <p class="text-[11px] text-slate-400">Target KKM: ${res.kkm} • Mode: ${escapeHtml(res.modeName)}</p>
+            <p class="text-xs font-bold text-slate-800 mb-0.5">${escapeHtml(res.examTitle)}</p>
+            <p class="text-[11px] text-slate-500">${escapeHtml(res.subject)} • KKM: ${res.kkm}</p>
 
-            <!-- Grid Statistik Pengerjaan -->
             <div class="grid grid-cols-3 gap-2.5 mt-5 pt-4 border-t border-slate-100">
               <div class="bg-emerald-50 rounded-2xl p-2.5">
-                <p class="text-lg font-extrabold text-emerald-700">${res.correctCount}</p>
-                <p class="text-[10px] font-semibold text-emerald-600">Benar</p>
+                <p class="text-lg font-extrabold text-[#047857]">${res.correctCount}</p>
+                <p class="text-[10px] font-semibold text-emerald-700">Benar</p>
               </div>
               <div class="bg-rose-50 rounded-2xl p-2.5">
                 <p class="text-lg font-extrabold text-rose-700">${res.wrongCount}</p>
@@ -1695,47 +1686,44 @@
 
             <div class="grid grid-cols-2 gap-2.5 mt-2.5 text-left">
               <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                <p class="text-[10px] text-slate-400 uppercase font-semibold">Waktu Pengerjaan</p>
+                <p class="text-[10px] text-slate-400 uppercase font-semibold">Durasi Pengerjaan</p>
                 <p class="text-xs font-bold text-slate-800 mt-0.5">⏱️ ${escapeHtml(res.durationText)}</p>
               </div>
               <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                <p class="text-[10px] text-slate-400 uppercase font-semibold">Catatan Pelanggaran</p>
-                <p class="text-xs font-bold ${res.violationsCount > 0 ? 'text-rose-600' : 'text-emerald-600'} mt-0.5">
+                <p class="text-[10px] text-slate-400 uppercase font-semibold">Log Keamanan</p>
+                <p class="text-xs font-bold ${res.violationsCount > 0 ? 'text-rose-600' : 'text-[#047857]'} mt-0.5">
                   🛡️ ${res.violationsCount} Pelanggaran
                 </p>
               </div>
             </div>
 
-            <!-- Info Sinkronisasi Sheet Nilai -->
-            <div class="mt-4 bg-indigo-50 border border-indigo-100 rounded-xl p-2.5 text-[11px] text-indigo-800 font-medium">
-              ✓ Nilai otomatis tersinkronisasi ke <strong>Sheet Nilai Guru/Admin</strong>.
+            <div class="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-[11px] text-emerald-900 font-medium">
+              ✓ Nilai otomatis dikirim ke <strong>Sheet Nilai Guru/Admin MTs PN 2 KEEROM</strong>.
             </div>
           </div>
 
-          <!-- Log Pelanggaran Jika Ada -->
           ${res.violationLogs && res.violationLogs.length > 0 ? `
             <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4">
-              <h3 class="text-xs font-bold text-rose-800 mb-2">Log Aktivitas Keamanan (${res.violationLogs.length})</h3>
+              <h3 class="text-xs font-bold text-rose-800 mb-2">Catatan Pelanggaran Keamanan (${res.violationLogs.length})</h3>
               <ul class="text-[11px] text-rose-700 space-y-1 font-mono">
                 ${res.violationLogs.map(log => `<li>• ${escapeHtml(log)}</li>`).join('')}
               </ul>
             </div>
           ` : ''}
 
-          <!-- Reviu Jawaban Ringkas -->
           <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Ringkasan Jawaban Anda</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Ringkasan Jawaban</h3>
             <div class="space-y-2.5">
               ${res.reviewDetails.map(item => `
                 <div class="p-3 rounded-xl border ${item.isCorrect ? 'bg-emerald-50/50 border-emerald-200' : 'bg-rose-50/50 border-rose-200'}">
                   <div class="flex items-start justify-between gap-2 mb-1">
                     <span class="text-xs font-bold text-slate-800">No. ${item.number}. ${escapeHtml(item.pertanyaan)}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold shrink-0 ${item.isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold shrink-0 ${item.isCorrect ? 'bg-[#047857] text-white' : 'bg-rose-600 text-white'}">
                       ${item.isCorrect ? 'Benar' : 'Salah'}
                     </span>
                   </div>
                   <p class="text-[11px] text-slate-600">Jawaban Anda: <strong>${item.userAns || '-'}</strong> (${escapeHtml(item.userAnsText)})</p>
-                  ${!item.isCorrect ? `<p class="text-[11px] text-emerald-700 font-semibold mt-0.5">Kunci Benar: ${item.correctKey} (${escapeHtml(item.correctText)})</p>` : ''}
+                  ${!item.isCorrect ? `<p class="text-[11px] text-[#047857] font-semibold mt-0.5">Kunci Benar: ${item.correctKey} (${escapeHtml(item.correctText)})</p>` : ''}
                 </div>
               `).join('')}
             </div>
@@ -1743,10 +1731,10 @@
 
           <div class="flex gap-2.5 pb-2">
             <button onclick="retakeExamFromLobby()" class="flex-1 py-3 rounded-2xl border border-slate-300 bg-white text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
-              Kembali ke Lobi Ujian
+              Kembali ke Lobi
             </button>
-            <button onclick="quickSwitchToAdminSheet()" class="flex-1 py-3 rounded-2xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition shadow-sm">
-              Lihat di Sheet Guru →
+            <button onclick="quickSwitchToAdminSheet()" class="flex-1 py-3 rounded-2xl bg-[#047857] text-white font-bold text-xs hover:bg-emerald-800 transition shadow-sm">
+              Buka Sheet Nilai Guru →
             </button>
           </div>
         </div>
@@ -1769,8 +1757,7 @@
 
     /**
      * ============================================================================
-     * FITUR 2, 3, 8, 9: DASHBOARD GURU / ADMIN
-     * (KELOLA UJIAN & TEMPLATE, SHEET NILAI FLEKSIBEL, & CETAK DAFNIL)
+     * 3, 6, 7. DASHBOARD GURU / ADMIN (MTs PN 2 KEEROM)
      * ============================================================================
      */
 
@@ -1781,12 +1768,10 @@
         <!-- Header Atas Guru / Admin -->
         <div class="no-print bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center font-extrabold text-sm">
-              GA
-            </div>
+            ${renderMadrasahEmblem('w-9 h-9 rounded-xl', 'w-5 h-5')}
             <div>
-              <h1 class="text-sm font-extrabold leading-tight">Dashboard Guru &amp; Admin</h1>
-              <p class="text-[11px] text-slate-400">EduExam Shield Management</p>
+              <h1 class="text-sm font-extrabold leading-tight">MTs PN 2 KEEROM</h1>
+              <p class="text-[11px] text-emerald-300">Panel Guru &amp; Tata Usaha</p>
             </div>
           </div>
           <button onclick="logoutApp()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white text-xs font-semibold transition">
@@ -1801,19 +1786,19 @@
           ${tab === 'dafnil' ? renderAdminDafnilTab() : ''}
         </div>
 
-        <!-- Bottom Navigation Bar Modern (Guru / Admin) -->
+        <!-- Bottom Navigation Bar -->
         <nav class="no-print bg-white border-t border-slate-200 px-3 py-2 grid grid-cols-3 gap-1 shrink-0">
-          <button onclick="switchAdminTab('exam')" class="py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition ${tab === 'exam' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'}">
+          <button onclick="switchAdminTab('exam')" class="py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition ${tab === 'exam' ? 'bg-emerald-50 text-[#047857] font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span class="text-[11px]">Ujian &amp; Soal</span>
+            <span class="text-[11px]">Bank Soal &amp; Mode</span>
           </button>
 
-          <button onclick="switchAdminTab('sheet')" class="py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition ${tab === 'sheet' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'}">
+          <button onclick="switchAdminTab('sheet')" class="py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition ${tab === 'sheet' ? 'bg-emerald-50 text-[#047857] font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span class="text-[11px]">Sheet Nilai</span>
           </button>
 
-          <button onclick="switchAdminTab('dafnil')" class="py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition ${tab === 'dafnil' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'}">
+          <button onclick="switchAdminTab('dafnil')" class="py-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition ${tab === 'dafnil' ? 'bg-emerald-50 text-[#047857] font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
             <span class="text-[11px]">Cetak Dafnil</span>
           </button>
@@ -1828,24 +1813,24 @@
     }
 
     /**
-     * TAB 1 ADMIN: PENGATURAN MODE UJIAN, TEMPLATE & UNGGAH FILE SOAL
+     * TAB 1: BANK SOAL & MODE (TEMPLATE, UNGGAH, TAMBAH MANUAL & HAPUS SOAL)
      */
     function renderAdminExamTab() {
       const cfg = appState.examConfig;
 
       return `
         <div class="p-4 space-y-4">
-          <!-- Pilih Mode Ujian (4 Mode) -->
+          <!-- 1. Pilih Mode Ujian -->
           <div class="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-card">
-            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">1. Pilih Mode Ujian Aktif</h2>
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">1. Mode Ujian Aktif</h2>
             <div class="grid grid-cols-2 gap-2">
               ${Object.values(EXAM_MODES).map(m => {
                 const isSelected = cfg.mode === m.id;
                 return `
-                  <button type="button" onclick="selectExamMode('${m.id}')" class="text-left p-3 rounded-2xl border-2 transition ${isSelected ? 'border-indigo-600 bg-indigo-50/70' : 'border-slate-200 hover:border-slate-300 bg-white'}">
+                  <button type="button" onclick="selectExamMode('${m.id}')" class="text-left p-3 rounded-2xl border-2 transition ${isSelected ? 'border-[#047857] bg-emerald-50/70' : 'border-slate-200 hover:border-slate-300 bg-white'}">
                     <div class="flex items-center justify-between mb-1">
                       <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${m.badgeBg}">${escapeHtml(m.shortName)}</span>
-                      ${isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>' : ''}
+                      ${isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-[#047857]"></span>' : ''}
                     </div>
                     <p class="text-xs font-bold text-slate-900 leading-snug mt-1">${escapeHtml(m.name)}</p>
                   </button>
@@ -1854,56 +1839,51 @@
             </div>
           </div>
 
-          <!-- Pengaturan Parameter Ujian -->
+          <!-- 2. Konfigurasi Paket Ujian -->
           <div class="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-card space-y-3">
-            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">2. Pengaturan Ujian &amp; Keamanan</h2>
-            
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">2. Pengaturan Ujian</h2>
+
             <div>
-              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Judul Paket Ujian</label>
-              <input type="text" value="${escapeHtml(cfg.title)}" onchange="updateExamConfig('title', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Judul Ujian</label>
+              <input type="text" value="${escapeHtml(cfg.title)}" onchange="updateExamConfig('title', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#047857]" />
             </div>
 
             <div class="grid grid-cols-2 gap-2.5">
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mata Pelajaran</label>
-                <input type="text" value="${escapeHtml(cfg.subject)}" onchange="updateExamConfig('subject', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="text" value="${escapeHtml(cfg.subject)}" onchange="updateExamConfig('subject', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#047857]" />
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Token Ujian</label>
-                <input type="text" value="${escapeHtml(cfg.token)}" onchange="updateExamConfig('token', this.value.toUpperCase())" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="text" value="${escapeHtml(cfg.token)}" onchange="updateExamConfig('token', this.value.toUpperCase())" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-[#047857]" />
               </div>
             </div>
 
             <div class="grid grid-cols-3 gap-2">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Timer (Menit)</label>
-                <input type="number" min="1" max="240" value="${cfg.durationMinutes}" onchange="updateExamConfig('durationMinutes', Math.max(1, Number(this.value)))" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Durasi (Menit)</label>
+                <input type="number" min="1" max="240" value="${cfg.durationMinutes}" onchange="updateExamConfig('durationMinutes', Math.max(1, Number(this.value)))" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#047857]" />
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Target KKM</label>
-                <input type="number" min="0" max="100" value="${cfg.kkm}" onchange="updateExamConfig('kkm', Math.min(100, Math.max(0, Number(this.value))))" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" min="0" max="100" value="${cfg.kkm}" onchange="updateExamConfig('kkm', Math.min(100, Math.max(0, Number(this.value))))" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#047857]" />
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Batas Curang</label>
-                <input type="number" min="1" max="10" value="${cfg.maxViolations}" onchange="updateExamConfig('maxViolations', Math.max(1, Number(this.value)))" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" min="1" max="10" value="${cfg.mode === 'strict' ? 2 : cfg.maxViolations}" ${cfg.mode === 'strict' ? 'disabled' : ''} onchange="updateExamConfig('maxViolations', Math.max(1, Number(this.value)))" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold disabled:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#047857]" />
               </div>
             </div>
           </div>
 
-          <!-- Template & Unggah File Soal (.CSV / .JSON) -->
+          <!-- 3. Template & Unggah Soal -->
           <div class="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-card space-y-3">
             <div class="flex items-center justify-between">
               <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">3. Template &amp; Unggah Soal</h2>
-              <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#047857] text-[11px] font-bold">
                 ${appState.questions.length} Soal Aktif
               </span>
             </div>
 
-            <p class="text-[11px] text-slate-500 leading-relaxed">
-              Unduh format template soal standar (<code class="text-slate-700">pertanyaan,opsi_a,opsi_b,opsi_c,opsi_d,kunci,bobot</code>), lalu unggah kembali file <strong>.CSV</strong> atau <strong>.JSON</strong> Anda.
-            </p>
-
-            <!-- Tombol Unduh Template CSV & JSON -->
             <div class="grid grid-cols-2 gap-2">
               <button type="button" onclick="downloadQuestionTemplate('csv')" class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition">
                 ⬇ Template .CSV
@@ -1913,35 +1893,44 @@
               </button>
             </div>
 
-            <!-- Input Unggah File -->
-            <label class="block w-full border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/50 rounded-2xl p-4 text-center cursor-pointer transition">
+            <label class="block w-full border-2 border-dashed border-emerald-300 hover:border-[#047857] bg-emerald-50/40 rounded-2xl p-4 text-center cursor-pointer transition">
               <input type="file" accept=".csv,.json" onchange="handleUploadExamFile(event)" class="hidden" />
-              <div class="text-indigo-600 font-bold text-xs mb-0.5">📤 Klik untuk Unggah File Soal (.CSV / .JSON)</div>
-              <div class="text-[10px] text-slate-500">Soal yang diunggah otomatis menggantikan paket soal aktif</div>
+              <div class="text-[#047857] font-bold text-xs mb-0.5">📤 Unggah File Soal (.CSV / .JSON)</div>
+              <div class="text-[10px] text-slate-500">Otomatis memperbarui bank soal aktif MTs PN 2 KEEROM</div>
             </label>
 
-            <!-- Tombol Uji Cepat Muat Paket Soal Baru / Reset -->
             <div class="flex gap-2">
-              <button type="button" onclick="loadSampleNewPackage()" class="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition">
+              <button type="button" onclick="loadSampleNewPackage()" class="flex-1 py-2.5 px-3 rounded-xl bg-[#047857] hover:bg-emerald-800 text-white text-[11px] font-bold transition">
                 ⚡ Muat Contoh Paket Soal Baru
               </button>
-              <button type="button" onclick="restoreDefaultQuestions()" class="py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-semibold transition">
-                Reset Soal Awal
+              <button type="button" onclick="restoreDefaultQuestions()" class="py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-semibold transition">
+                Reset
               </button>
             </div>
           </div>
 
-          <!-- Pratinjau Daftar Soal Aktif -->
+          <!-- 4. Daftar Soal Aktif + Tambah Soal Manual & Hapus -->
           <div class="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-card">
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">Pratinjau Butir Soal Aktif</h3>
-            <div class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">4. Daftar Butir Soal (${appState.questions.length})</h3>
+              <button type="button" onclick="promptAddManualQuestion()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition">
+                + Tambah Soal Manual
+              </button>
+            </div>
+
+            <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
               ${appState.questions.map((q, idx) => `
                 <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs">
                   <div class="flex items-start justify-between gap-2 mb-1">
-                    <span class="font-bold text-slate-800">${idx + 1}. ${escapeHtml(q.pertanyaan)}</span>
-                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-bold shrink-0">Kunci: ${escapeHtml(q.kunci)}</span>
+                    <span class="font-bold text-slate-800 leading-snug">${idx + 1}. ${escapeHtml(q.pertanyaan)}</span>
+                    <div class="flex items-center gap-1 shrink-0">
+                      <span class="px-2 py-0.5 rounded bg-emerald-100 text-[#047857] text-[10px] font-bold">Kunci: ${escapeHtml(q.kunci)}</span>
+                      <button type="button" onclick="deleteSingleQuestion('${q.id}')" title="Hapus soal ini" class="p-1 text-slate-400 hover:text-rose-600 transition">
+                        🗑️
+                      </button>
+                    </div>
                   </div>
-                  <p class="text-[11px] text-slate-500">A: ${escapeHtml(q.opsi_a)} • B: ${escapeHtml(q.opsi_b)}</p>
+                  <p class="text-[11px] text-slate-500">A: ${escapeHtml(q.opsi_a)} | B: ${escapeHtml(q.opsi_b)} | C: ${escapeHtml(q.opsi_c)} | D: ${escapeHtml(q.opsi_d)}</p>
                 </div>
               `).join('')}
             </div>
@@ -1952,18 +1941,25 @@
 
     function selectExamMode(modeId) {
       appState.examConfig.mode = modeId;
+      if (modeId === 'strict') {
+        appState.examConfig.maxViolations = 2;
+      } else if (appState.examConfig.maxViolations < 3) {
+        appState.examConfig.maxViolations = 3;
+      }
       saveState();
       renderApp();
-      showToast(`Mode ujian diubah ke: ${EXAM_MODES[modeId].name}`, 'success');
+      showToast(`Mode ujian aktif diubah ke: ${EXAM_MODES[modeId].name}`, 'success');
     }
 
     function updateExamConfig(key, val) {
       appState.examConfig[key] = val;
+      if (key === 'subject') {
+        appState.dafnilFilterSubject = val;
+      }
       saveState();
       showToast('Pengaturan ujian diperbarui.', 'success');
     }
 
-    // Unduh Template Soal (.CSV / .JSON)
     function downloadQuestionTemplate(format) {
       let content = '';
       let filename = '';
@@ -1976,19 +1972,19 @@
           return [esc(q.pertanyaan), esc(q.opsi_a), esc(q.opsi_b), esc(q.opsi_c), esc(q.opsi_d), q.kunci, q.bobot].join(',');
         });
         content = [header, ...rows].join('\n');
-        filename = 'template_soal_eduexam.csv';
+        filename = 'template_soal_mts_pn2_keerom.csv';
         mime = 'text/csv;charset=utf-8;';
       } else {
         const jsonList = DEFAULT_QUESTIONS.slice(0, 4).map(({ pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d, kunci, bobot }) => ({
           pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d, kunci, bobot
         }));
         content = JSON.stringify(jsonList, null, 2);
-        filename = 'template_soal_eduexam.json';
+        filename = 'template_soal_mts_pn2_keerom.json';
         mime = 'application/json;charset=utf-8;';
       }
 
       triggerFileDownload(content, filename, mime);
-      showToast(`Template ${filename} berhasil diunduh!`, 'success');
+      showToast(`Template "${filename}" berhasil diunduh!`, 'success');
     }
 
     function triggerFileDownload(content, filename, mimeType) {
@@ -2003,7 +1999,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // Parser CSV tangguh (menangani tanda kutip & koma di dalam kalimat)
     function parseCSVLine(line) {
       const result = [];
       let current = '';
@@ -2028,7 +2023,6 @@
       return result;
     }
 
-    // Unggah & Parsing File Soal (.CSV / .JSON)
     function handleUploadExamFile(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -2051,13 +2045,12 @@
               opsi_d: String(item.opsi_d || '').trim(),
               kunci: String(item.kunci || 'A').trim().toUpperCase(),
               bobot: Number(item.bobot) || 10,
-              pembahasan: item.pembahasan || 'Kunci jawaban sesuai dokumen soal terunggah.'
+              pembahasan: item.pembahasan || 'Kunci jawaban sesuai berkas soal yang diunggah.'
             }));
           } else {
             const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
             if (lines.length < 2) throw new Error('File CSV kosong atau hanya berisi header.');
 
-            // Lewati baris header pertama
             for (let i = 1; i < lines.length; i++) {
               const cols = parseCSVLine(lines[i]);
               if (cols.length >= 6 && cols[0]) {
@@ -2070,7 +2063,7 @@
                   opsi_d: cols[4] || 'Opsi D',
                   kunci: (cols[5] || 'A').toUpperCase(),
                   bobot: Number(cols[6]) || 10,
-                  pembahasan: 'Kunci jawaban sesuai dokumen CSV terunggah.'
+                  pembahasan: 'Kunci jawaban sesuai berkas CSV yang diunggah.'
                 });
               }
             }
@@ -2078,7 +2071,7 @@
 
           const validQuestions = parsedQuestions.filter(q => q.pertanyaan && ['A', 'B', 'C', 'D'].includes(q.kunci));
           if (validQuestions.length === 0) {
-            throw new Error('Tidak ditemukan butir soal valid. Pastikan format kolom sesuai template.');
+            throw new Error('Tidak ditemukan soal valid. Pastikan kolom sesuai template.');
           }
 
           appState.questions = validQuestions;
@@ -2094,7 +2087,7 @@
 
     function loadSampleNewPackage() {
       appState.questions = JSON.parse(JSON.stringify(SAMPLE_NEW_PACKAGE));
-      appState.examConfig.title = 'Evaluasi Terpadu — Sains, Numerasi & Literasi';
+      appState.examConfig.title = 'Evaluasi Terpadu Madrasah (Numerasi, IPA & Akhlak)';
       saveState();
       renderApp();
       showToast('Contoh paket soal baru (5 soal) berhasil dimuat!', 'success');
@@ -2102,32 +2095,114 @@
 
     function restoreDefaultQuestions() {
       appState.questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
-      appState.examConfig.title = 'Penilaian Tengah Semester — Informatika & Literasi Digital';
+      appState.examConfig.title = 'Penilaian Akhir Semester (PAS) Ganjil';
       saveState();
       renderApp();
-      showToast('Paket soal bawaan (8 soal) berhasil dipulihkan.', 'info');
+      showToast('Bank soal bawaan (8 soal) berhasil dipulihkan.', 'info');
+    }
+
+    function promptAddManualQuestion() {
+      const formHtml = `
+        <div class="space-y-2.5 text-left max-h-[55vh] overflow-y-auto pr-1">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Pertanyaan Soal</label>
+            <textarea id="mq-pertanyaan" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#047857]" placeholder="Tulis teks soal di sini..."></textarea>
+          </div>
+          <div class="grid grid-cols-1 gap-2">
+            <input id="mq-a" type="text" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs" placeholder="Pilihan A" />
+            <input id="mq-b" type="text" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs" placeholder="Pilihan B" />
+            <input id="mq-c" type="text" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs" placeholder="Pilihan C" />
+            <input id="mq-d" type="text" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs" placeholder="Pilihan D" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Kunci Jawaban</label>
+              <select id="mq-kunci" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Bobot Poin</label>
+              <input id="mq-bobot" type="number" min="1" max="100" value="10" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" />
+            </div>
+          </div>
+        </div>
+      `;
+
+      openCustomModal({
+        title: 'Tambah Butir Soal Manual',
+        desc: 'Lengkapi pertanyaan dan keempat pilihan jawaban berikut.',
+        confirmText: 'Simpan Soal',
+        bodyHtml: formHtml,
+        onConfirm: () => {
+          const pertanyaan = document.getElementById('mq-pertanyaan').value.trim();
+          const opsi_a = document.getElementById('mq-a').value.trim();
+          const opsi_b = document.getElementById('mq-b').value.trim();
+          const opsi_c = document.getElementById('mq-c').value.trim();
+          const opsi_d = document.getElementById('mq-d').value.trim();
+          const kunci = document.getElementById('mq-kunci').value;
+          const bobot = Math.max(1, Number(document.getElementById('mq-bobot').value) || 10);
+
+          if (!pertanyaan || !opsi_a || !opsi_b || !opsi_c || !opsi_d) {
+            showToast('Harap isi pertanyaan dan semua opsi jawaban (A, B, C, D)!', 'error');
+            return false;
+          }
+
+          appState.questions.push({
+            id: 'mq_' + Date.now(),
+            pertanyaan,
+            opsi_a,
+            opsi_b,
+            opsi_c,
+            opsi_d,
+            kunci,
+            bobot,
+            pembahasan: `Kunci jawaban benar adalah ${kunci}.`
+          });
+          saveState();
+          renderApp();
+          showToast('Butir soal baru berhasil ditambahkan!', 'success');
+          return true;
+        }
+      });
+    }
+
+    function deleteSingleQuestion(qId) {
+      if (appState.questions.length <= 1) {
+        showToast('Minimal harus tersisa 1 soal aktif dalam bank soal.', 'warning');
+        return;
+      }
+      appState.questions = appState.questions.filter(q => q.id !== qId);
+      saveState();
+      renderApp();
+      showToast('Butir soal dihapus dari bank soal.', 'info');
     }
 
     /**
      * ============================================================================
-     * TAB 2 ADMIN: SHEET NILAI & PENGOLAHNYA (FLEKSIBEL BARIS & KOLOM)
+     * TAB 2: SHEET NILAI & PENGOLAHNYA (FLEKSIBEL BARIS & KOLOM)
      * ============================================================================
      */
 
-    // Helper perhitungan otomatis tiap baris siswa & ringkasan kelas
-    function computeGradeAnalytics() {
+    function computeGradeAnalytics(filterClass = 'ALL') {
       const kkm = Number(appState.examConfig.kkm) || 75;
       const cols = appState.scoreColumns;
 
-      const rows = appState.studentsData.map((st, idx) => {
+      const filteredList = filterClass === 'ALL'
+        ? appState.studentsData
+        : appState.studentsData.filter(s => s.kelas === filterClass);
+
+      const rows = filteredList.map((st, idx) => {
         let sum = 0;
         let filledCount = 0;
 
         cols.forEach(c => {
           const rawVal = st.scores[c.id];
           if (rawVal !== '' && rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal))) {
-            const num = Number(rawVal);
-            sum += num;
+            sum += Number(rawVal);
             filledCount += 1;
           }
         });
@@ -2162,6 +2237,7 @@
       const lowestScore = averages.length > 0 ? Math.min(...averages) : 0;
       const tuntasCount = rows.filter(r => r.isTuntas).length;
       const remedialCount = rows.length - tuntasCount;
+      const passPercentage = rows.length > 0 ? Math.round((tuntasCount / rows.length) * 100) : 0;
 
       return {
         rows,
@@ -2170,12 +2246,13 @@
         lowestScore,
         tuntasCount,
         remedialCount,
+        passPercentage,
         kkm
       };
     }
 
     function renderAdminSheetTab() {
-      const analytics = computeGradeAnalytics();
+      const analytics = computeGradeAnalytics('ALL');
       const cols = appState.scoreColumns;
 
       return `
@@ -2184,31 +2261,31 @@
           <div class="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-card">
             <div class="flex items-center justify-between gap-2 mb-3">
               <div>
-                <h2 class="text-sm font-extrabold text-slate-900">Sheet Pengolah Nilai</h2>
-                <p class="text-[11px] text-slate-500">Klik sel mana saja untuk mengedit langsung</p>
+                <h2 class="text-sm font-extrabold text-slate-900">Sheet Nilai MTs PN 2 KEEROM</h2>
+                <p class="text-[11px] text-slate-500">Klik sel mana saja untuk mengedit nilai langsung</p>
               </div>
-              <div class="flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100">
-                <span class="text-[11px] font-bold text-indigo-800">KKM:</span>
-                <input type="number" min="0" max="100" value="${analytics.kkm}" onchange="updateSheetKKM(this.value)" class="w-12 text-center bg-white border border-indigo-200 rounded-lg text-xs font-extrabold text-indigo-900 py-0.5 focus:outline-none" />
+              <div class="flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                <span class="text-[11px] font-bold text-[#047857]">KKM:</span>
+                <input type="number" min="0" max="100" value="${analytics.kkm}" onchange="updateSheetKKM(this.value)" class="w-12 text-center bg-white border border-emerald-300 rounded-lg text-xs font-extrabold text-emerald-950 py-0.5 focus:outline-none" />
               </div>
             </div>
 
             <!-- Tombol Fleksibilitas Baris & Kolom -->
             <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="addStudentRow()" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition">
+              <button type="button" onclick="promptAddStudentRow()" class="py-2.5 px-3 rounded-xl bg-[#047857] hover:bg-emerald-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition">
                 <span>+ Tambah Baris Siswa</span>
               </button>
-              <button type="button" onclick="promptAddScoreColumn()" class="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition">
-                <span>+ Tambah Kolom Nilai</span>
+              <button type="button" onclick="promptAddScoreColumn()" class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition">
+                <span>+ Tambah Kolom</span>
               </button>
             </div>
           </div>
 
-          <!-- Ringkasan Statistik Kelas Cepat -->
+          <!-- Kartu Ringkasan Statistik Kelas -->
           <div class="grid grid-cols-4 gap-2 text-center">
             <div class="bg-white rounded-2xl p-2.5 border border-slate-200/80">
               <p class="text-[10px] text-slate-400 font-semibold">Rata Kelas</p>
-              <p class="text-sm font-extrabold text-indigo-700">${analytics.classAvg}</p>
+              <p class="text-sm font-extrabold text-[#047857]">${analytics.classAvg}</p>
             </div>
             <div class="bg-white rounded-2xl p-2.5 border border-slate-200/80">
               <p class="text-[10px] text-slate-400 font-semibold">Tertinggi</p>
@@ -2219,21 +2296,21 @@
               <p class="text-sm font-extrabold text-rose-600">${analytics.lowestScore}</p>
             </div>
             <div class="bg-white rounded-2xl p-2.5 border border-slate-200/80">
-              <p class="text-[10px] text-slate-400 font-semibold">Tuntas</p>
-              <p class="text-sm font-extrabold text-slate-800">${analytics.tuntasCount}/${analytics.rows.length}</p>
+              <p class="text-[10px] text-slate-400 font-semibold">Ketuntasan</p>
+              <p class="text-sm font-extrabold text-slate-800">${analytics.passPercentage}%</p>
             </div>
           </div>
 
-          <!-- Tabel Spreadsheet Fleksibel (Scroll Horizontal + Sticky Nama) -->
+          <!-- Tabel Spreadsheet Fleksibel -->
           <div class="bg-white rounded-3xl border border-slate-200 shadow-card overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr class="bg-slate-900 text-white text-[11px]">
                     <th class="py-2.5 px-2.5 font-bold text-center w-8 sticky left-0 bg-slate-900 z-10">No</th>
-                    <th class="py-2.5 px-2.5 font-bold min-w-[135px] sticky left-8 bg-slate-900 z-10 border-r border-slate-700">Nama Siswa</th>
-                    <th class="py-2.5 px-2 font-bold min-w-[82px]">NIS</th>
-                    <th class="py-2.5 px-2 font-bold min-w-[74px]">Kelas</th>
+                    <th class="py-2.5 px-2.5 font-bold min-w-[140px] sticky left-8 bg-slate-900 z-10 border-r border-slate-700">Nama Siswa</th>
+                    <th class="py-2.5 px-2 font-bold min-w-[92px]">NISN</th>
+                    <th class="py-2.5 px-2 font-bold min-w-[76px]">Kelas</th>
                     ${cols.map(col => `
                       <th class="py-2 px-2 font-bold min-w-[78px] text-center bg-slate-800 border-l border-slate-700">
                         <div class="flex items-center justify-center gap-1">
@@ -2246,45 +2323,45 @@
                         </div>
                       </th>
                     `).join('')}
-                    <th class="py-2.5 px-2 font-bold text-center bg-indigo-950 min-w-[64px]">Jumlah</th>
-                    <th class="py-2.5 px-2 font-bold text-center bg-indigo-900 min-w-[68px]">Rata2</th>
+                    <th class="py-2.5 px-2 font-bold text-center bg-emerald-950 min-w-[68px]">Rata2</th>
                     <th class="py-2.5 px-2 font-bold text-center min-w-[56px]">Pred</th>
-                    <th class="py-2.5 px-2 font-bold text-center min-w-[76px]">Ket.</th>
-                    <th class="py-2.5 px-2 font-bold text-center w-9">Aksi</th>
+                    <th class="py-2.5 px-2 font-bold text-center min-w-[76px]">Status</th>
+                    <th class="py-2.5 px-2 font-bold text-center w-9">Hapus</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                   ${analytics.rows.map(row => `
-                    <tr class="hover:bg-indigo-50/30 transition">
+                    <tr class="hover:bg-emerald-50/30 transition">
                       <td class="py-2 px-2 text-center font-semibold text-slate-500 sticky left-0 bg-white z-10">${row.no}</td>
                       <td class="py-1.5 px-2 sticky left-8 bg-white z-10 border-r border-slate-200">
-                        <input type="text" value="${escapeHtml(row.name)}" onchange="updateStudentField('${row.id}', 'name', this.value)" class="w-full bg-transparent font-semibold text-slate-900 focus:bg-indigo-50 focus:outline-none rounded px-1 py-0.5" />
+                        <input type="text" value="${escapeHtml(row.name)}" onchange="updateStudentField('${row.id}', 'name', this.value)" class="w-full bg-transparent font-semibold text-slate-900 focus:bg-emerald-50 focus:outline-none rounded px-1 py-0.5" />
                         ${row.note ? `<span class="block text-[9px] text-rose-600 font-semibold px-1">${escapeHtml(row.note)}</span>` : ''}
                       </td>
                       <td class="py-1.5 px-1.5">
-                        <input type="text" value="${escapeHtml(row.nis)}" onchange="updateStudentField('${row.id}', 'nis', this.value)" class="w-full bg-transparent font-mono text-[11px] text-slate-600 focus:bg-indigo-50 focus:outline-none rounded px-1 py-0.5" />
+                        <input type="text" value="${escapeHtml(row.nisn)}" onchange="updateStudentField('${row.id}', 'nisn', this.value)" class="w-full bg-transparent font-mono text-[11px] text-slate-600 focus:bg-emerald-50 focus:outline-none rounded px-1 py-0.5" />
                       </td>
                       <td class="py-1.5 px-1.5">
-                        <input type="text" value="${escapeHtml(row.kelas)}" onchange="updateStudentField('${row.id}', 'kelas', this.value)" class="w-full bg-transparent text-[11px] text-slate-600 focus:bg-indigo-50 focus:outline-none rounded px-1 py-0.5" />
+                        <select onchange="updateStudentField('${row.id}', 'kelas', this.value)" class="bg-transparent text-[11px] font-semibold text-slate-700 focus:bg-emerald-50 focus:outline-none rounded px-1 py-0.5">
+                          ${CLASS_OPTIONS.map(k => `<option value="${k}" ${row.kelas === k ? 'selected' : ''}>${k}</option>`).join('')}
+                        </select>
                       </td>
                       ${cols.map(col => {
                         const val = row.scores[col.id];
                         const isLow = val !== '' && val !== null && val !== undefined && Number(val) < analytics.kkm;
                         return `
                           <td class="py-1.5 px-1.5 text-center border-l border-slate-100">
-                            <input type="number" min="0" max="100" placeholder="-" value="${val !== undefined && val !== null ? val : ''}" onchange="updateStudentScore('${row.id}', '${col.id}', this.value)" class="w-14 text-center font-bold rounded-lg border border-slate-200 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isLow ? 'text-rose-600 bg-rose-50/60 border-rose-200' : 'text-slate-800 bg-slate-50/60'}" />
+                            <input type="number" min="0" max="100" placeholder="-" value="${val !== undefined && val !== null ? val : ''}" onchange="updateStudentScore('${row.id}', '${col.id}', this.value)" class="w-14 text-center font-bold rounded-lg border border-slate-200 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#047857] ${isLow ? 'text-rose-600 bg-rose-50/60 border-rose-200' : 'text-slate-800 bg-slate-50/60'}" />
                           </td>
                         `;
                       }).join('')}
-                      <td class="py-2 px-2 text-center font-bold text-slate-700 bg-slate-50/70">${row.sum}</td>
-                      <td class="py-2 px-2 text-center font-extrabold text-indigo-700 bg-indigo-50/40">${row.avg}</td>
+                      <td class="py-2 px-2 text-center font-extrabold text-[#047857] bg-emerald-50/40">${row.avg}</td>
                       <td class="py-2 px-2 text-center">
-                        <span class="inline-block w-6 h-6 leading-6 rounded-lg font-extrabold text-[11px] ${row.predicate === 'A' ? 'bg-emerald-100 text-emerald-800' : row.predicate === 'B' ? 'bg-blue-100 text-blue-800' : row.predicate === 'C' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}">
+                        <span class="inline-block w-6 h-6 leading-6 rounded-lg font-extrabold text-[11px] ${row.predicate === 'A' ? 'bg-emerald-100 text-emerald-800' : row.predicate === 'B' ? 'bg-teal-100 text-teal-800' : row.predicate === 'C' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}">
                           ${row.predicate}
                         </span>
                       </td>
                       <td class="py-2 px-2 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${row.isTuntas ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${row.isTuntas ? 'bg-emerald-100 text-[#047857]' : 'bg-rose-100 text-rose-700'}">
                           ${row.statusText}
                         </span>
                       </td>
@@ -2296,24 +2373,16 @@
                     </tr>
                   `).join('')}
                 </tbody>
-                <tfoot>
-                  <tr class="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-300 text-[11px]">
-                    <td colspan="${4 + cols.length}" class="py-2.5 px-3 text-right">
-                      Ringkasan Kelas — Rata-rata: <span class="text-indigo-700">${analytics.classAvg}</span> | Tertinggi: <span class="text-emerald-700">${analytics.highestScore}</span> | Terendah: <span class="text-rose-700">${analytics.lowestScore}</span>
-                    </td>
-                    <td colspan="5" class="py-2.5 px-3 text-center text-slate-600">
-                      ${analytics.tuntasCount} Tuntas / ${analytics.remedialCount} Remedial
-                    </td>
-                  </tr>
-                </tfoot>
               </table>
             </div>
           </div>
 
-          <div class="flex items-center justify-between pt-1 pb-2">
-            <span class="text-[11px] text-slate-500">Total: ${analytics.rows.length} siswa • ${cols.length} kolom nilai</span>
-            <button type="button" onclick="switchAdminTab('dafnil')" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition">
-              Pratinjau &amp; Cetak Dafnil →
+          <div class="flex items-center justify-between gap-2 pt-1 pb-2">
+            <button type="button" onclick="exportDafnilCSV('ALL')" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#047857] border border-emerald-200 text-xs font-bold transition">
+              📊 Export CSV Nilai
+            </button>
+            <button type="button" onclick="switchAdminTab('dafnil')" class="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition">
+              Cetak Dafnil →
             </button>
           </div>
         </div>
@@ -2325,28 +2394,65 @@
       appState.examConfig.kkm = num;
       saveState();
       renderApp();
-      showToast(`KKM diperbarui menjadi ${num}. Status ketuntasan disesuaikan otomatis.`, 'success');
+      showToast(`KKM diperbarui menjadi ${num}. Status ketuntasan dihitung ulang otomatis.`, 'success');
     }
 
-    function addStudentRow() {
-      const nextNum = appState.studentsData.length + 1;
-      const nisAuto = '202601' + String(nextNum).padStart(2, '0');
-      const newScores = {};
-      appState.scoreColumns.forEach(c => {
-        newScores[c.id] = '';
-      });
+    function promptAddStudentRow() {
+      const formHtml = `
+        <div class="space-y-2.5 text-left">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap Siswa</label>
+            <input id="new-st-name" type="text" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#047857]" placeholder="Contoh: Zahra Aulia Putri" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">NISN</label>
+              <input id="new-st-nisn" type="text" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono" placeholder="0114829107" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelas</label>
+              <select id="new-st-kelas" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                ${CLASS_OPTIONS.map(k => `<option value="${k}" ${k === appState.examConfig.targetClass ? 'selected' : ''}>${k}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+      `;
 
-      appState.studentsData.push({
-        id: 'st_' + Date.now(),
-        nis: nisAuto,
-        name: `Siswa Baru ${nextNum}`,
-        kelas: appState.examConfig.targetClass,
-        scores: newScores,
-        note: ''
+      openCustomModal({
+        title: 'Tambah Baris Siswa Baru',
+        desc: 'Masukkan identitas siswa MTs PN 2 KEEROM untuk ditambahkan ke Sheet Nilai.',
+        confirmText: 'Tambah Siswa',
+        bodyHtml: formHtml,
+        onConfirm: () => {
+          const name = document.getElementById('new-st-name').value.trim();
+          const nisn = document.getElementById('new-st-nisn').value.trim() || ('011482' + Math.floor(1000 + Math.random() * 9000));
+          const kelas = document.getElementById('new-st-kelas').value;
+
+          if (!name) {
+            showToast('Nama lengkap siswa wajib diisi!', 'error');
+            return false;
+          }
+
+          const newScores = {};
+          appState.scoreColumns.forEach(c => {
+            newScores[c.id] = '';
+          });
+
+          appState.studentsData.push({
+            id: 'st_' + Date.now(),
+            nisn,
+            name,
+            kelas,
+            scores: newScores,
+            note: ''
+          });
+          saveState();
+          renderApp();
+          showToast(`Siswa "${name}" (${kelas}) ditambahkan ke Sheet Nilai!`, 'success');
+          return true;
+        }
       });
-      saveState();
-      renderApp();
-      showToast('Baris siswa baru ditambahkan! Klik nama/nilai untuk mengedit.', 'success');
     }
 
     function deleteStudentRow(studentId) {
@@ -2356,7 +2462,7 @@
       }
       openCustomModal({
         title: 'Hapus Baris Siswa?',
-        desc: 'Data nilai siswa pada baris ini akan dihapus dari sheet nilai.',
+        desc: 'Data nilai siswa pada baris ini akan dihapus permanen dari Sheet Nilai.',
         confirmText: 'Hapus Baris',
         confirmColor: 'bg-rose-600 hover:bg-rose-700',
         onConfirm: () => {
@@ -2369,15 +2475,28 @@
     }
 
     function promptAddScoreColumn() {
+      const presets = ['Tugas', 'Praktik', 'Ujian CBT', 'UH 3', 'Remedial'];
+      const bodyHtml = `
+        <div class="text-left">
+          <input id="new-col-name" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857]" placeholder="Contoh: Tugas / Praktik / Ujian CBT" />
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            ${presets.map(p => `
+              <button type="button" onclick="document.getElementById('new-col-name').value='${p}'" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-[#047857] text-xs font-medium transition">
+                + ${p}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
       openCustomModal({
-        title: 'Tambah Kolom Nilai Baru',
-        desc: 'Masukkan nama komponen nilai baru (misalnya: Tugas 1, UH 2, Praktik, Proyek, atau UAS).',
+        title: 'Tambah Kolom Penilaian Baru',
+        desc: 'Masukkan nama komponen penilaian baru pada Sheet Nilai.',
         confirmText: 'Tambah Kolom',
-        showInput: true,
-        inputPlaceholder: 'Contoh: Tugas 1 / Praktik',
-        presets: ['Tugas 1', 'UH 2', 'Praktik', 'Proyek', 'UAS'],
-        onConfirm: (colName) => {
-          const label = colName || `Nilai ${appState.scoreColumns.length + 1}`;
+        bodyHtml,
+        onConfirm: () => {
+          const raw = document.getElementById('new-col-name').value.trim();
+          const label = raw || `Nilai ${appState.scoreColumns.length + 1}`;
           const colId = 'col_' + Date.now();
           appState.scoreColumns.push({ id: colId, label });
           appState.studentsData.forEach(st => {
@@ -2385,7 +2504,8 @@
           });
           saveState();
           renderApp();
-          showToast(`Kolom "${label}" berhasil ditambahkan ke Sheet Nilai!`, 'success');
+          showToast(`Kolom "${label}" berhasil ditambahkan!`, 'success');
+          return true;
         }
       });
     }
@@ -2398,7 +2518,7 @@
       const target = appState.scoreColumns.find(c => c.id === colId);
       openCustomModal({
         title: `Hapus Kolom "${target ? target.label : ''}"?`,
-        desc: 'Seluruh nilai pada kolom ini akan dihapus dan rata-rata siswa dihitung ulang otomatis.',
+        desc: 'Seluruh nilai pada kolom ini akan dihapus dan rata-rata dihitung ulang otomatis.',
         confirmText: 'Hapus Kolom',
         confirmColor: 'bg-rose-600 hover:bg-rose-700',
         onConfirm: () => {
@@ -2428,8 +2548,7 @@
       if (rawValue === '' || rawValue === null) {
         st.scores[colId] = '';
       } else {
-        const clamped = Math.min(100, Math.max(0, Number(rawValue) || 0));
-        st.scores[colId] = clamped;
+        st.scores[colId] = Math.min(100, Math.max(0, Number(rawValue) || 0));
       }
       saveState();
       renderApp();
@@ -2437,51 +2556,83 @@
 
     /**
      * ============================================================================
-     * TAB 3 ADMIN: CETAK DAFNIL (DAFTAR NILAI RESMI & EKSPOR CSV)
+     * TAB 3: ADMIN MENCETAK DAFNIL (KEMENTERIAN AGAMA RI — MTs PN 2 KEEROM)
      * ============================================================================
      */
+
     function renderAdminDafnilTab() {
       const cfg = appState.examConfig;
       const modeInfo = EXAM_MODES[cfg.mode] || EXAM_MODES.strict;
-      const analytics = computeGradeAnalytics();
+      const selectedClass = appState.dafnilFilterClass || 'ALL';
+      const selectedSubject = appState.dafnilFilterSubject || cfg.subject;
+      const analytics = computeGradeAnalytics(selectedClass);
       const cols = appState.scoreColumns;
       const todayIndo = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
+      const subjectPresets = [
+        cfg.subject,
+        'Matematika',
+        'Ilmu Pengetahuan Alam (IPA)',
+        'Bahasa Indonesia',
+        'Bahasa Arab',
+        'Akidah Akhlak',
+        'Fikih',
+        'Al-Qur\'an Hadis',
+        'Sejarah Kebudayaan Islam (SKI)'
+      ].filter((v, i, a) => v && a.indexOf(v) === i);
+
       return `
         <div class="p-4 space-y-4">
-          <!-- Panel Pengaturan Kop & Tombol Cetak (Disembunyikan saat Print) -->
+          <!-- Panel Filter Kelas, Mata Pelajaran & Cetak (Disembunyikan saat Print) -->
           <div class="no-print bg-white rounded-3xl p-4 border border-slate-200/80 shadow-card space-y-3">
-            <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-extrabold text-slate-900">Cetak Daftar Nilai (Dafnil)</h2>
+              <p class="text-[11px] text-slate-500">Filter berdasarkan Kelas &amp; Mata Pelajaran sebelum mencetak</p>
+            </div>
+
+            <!-- Filter Kelas & Mata Pelajaran -->
+            <div class="grid grid-cols-2 gap-2.5">
               <div>
-                <h2 class="text-sm font-extrabold text-slate-900">Cetak Daftar Nilai (Dafnil)</h2>
-                <p class="text-[11px] text-slate-500">Siap cetak A4 / Simpan PDF &amp; Ekspor CSV</p>
+                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Filter Kelas</label>
+                <select onchange="updateDafnilFilter('dafnilFilterClass', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#047857]">
+                  <option value="ALL" ${selectedClass === 'ALL' ? 'selected' : ''}>Semua Kelas</option>
+                  ${CLASS_OPTIONS.map(k => `<option value="${k}" ${selectedClass === k ? 'selected' : ''}>Kelas ${k}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Mata Pelajaran</label>
+                <select onchange="updateDafnilFilter('dafnilFilterSubject', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#047857]">
+                  ${subjectPresets.map(sub => `<option value="${escapeHtml(sub)}" ${selectedSubject === sub ? 'selected' : ''}>${escapeHtml(sub)}</option>`).join('')}
+                </select>
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="printDafnilDocument()" class="py-3 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition">
-                🖨️ Cetak Dafnil / PDF
+              <button type="button" onclick="printDafnilDocument()" class="py-3 px-3 rounded-2xl bg-[#047857] hover:bg-emerald-800 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition">
+                🖨️ Cetak Dafnil / Simpan PDF
               </button>
-              <button type="button" onclick="exportDafnilCSV()" class="py-3 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition">
-                📊 Ekspor CSV (Excel)
+              <button type="button" onclick="exportDafnilCSV('${selectedClass}')" class="py-3 px-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition">
+                📊 Export CSV Nilai
               </button>
             </div>
 
-            <!-- Kustomisasi Cepat Identitas Kop Dokumen -->
+            <!-- Edit Cepat Penandatangan -->
             <details class="bg-slate-50 rounded-2xl p-3 border border-slate-200/70">
-              <summary class="text-xs font-bold text-slate-700 cursor-pointer">⚙️ Ubah Identitas Kop Sekolah &amp; Penandatangan</summary>
+              <summary class="text-xs font-bold text-slate-700 cursor-pointer">⚙️ Ubah Nama Kepala Madrasah &amp; Guru Mapel</summary>
               <div class="space-y-2.5 mt-3 pt-2.5 border-t border-slate-200">
-                <div>
-                  <label class="block text-[10px] font-semibold text-slate-500">Nama Sekolah / Instansi</label>
-                  <input type="text" value="${escapeHtml(cfg.schoolName)}" onchange="updateExamConfig('schoolName', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
-                </div>
-                <div>
-                  <label class="block text-[10px] font-semibold text-slate-500">Semester / Tahun Ajaran</label>
-                  <input type="text" value="${escapeHtml(cfg.semester)}" onchange="updateExamConfig('semester', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-semibold text-slate-500">Kepala Madrasah</label>
+                    <input type="text" value="${escapeHtml(cfg.principalName)}" onchange="updateExamConfig('principalName', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-semibold text-slate-500">NIP Kepala Madrasah</label>
+                    <input type="text" value="${escapeHtml(cfg.principalNip)}" onchange="updateExamConfig('principalNip', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
+                  </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                   <div>
-                    <label class="block text-[10px] font-semibold text-slate-500">Nama Guru Pengampu</label>
+                    <label class="block text-[10px] font-semibold text-slate-500">Guru Mata Pelajaran</label>
                     <input type="text" value="${escapeHtml(cfg.teacherName)}" onchange="updateExamConfig('teacherName', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
                   </div>
                   <div>
@@ -2489,85 +2640,83 @@
                     <input type="text" value="${escapeHtml(cfg.teacherNip)}" onchange="updateExamConfig('teacherNip', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
                   </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <div>
-                    <label class="block text-[10px] font-semibold text-slate-500">Nama Kepala Sekolah</label>
-                    <input type="text" value="${escapeHtml(cfg.principalName)}" onchange="updateExamConfig('principalName', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-semibold text-slate-500">NIP Kepala Sekolah</label>
-                    <input type="text" value="${escapeHtml(cfg.principalNip)}" onchange="updateExamConfig('principalNip', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs bg-white" />
-                  </div>
-                </div>
               </div>
             </details>
           </div>
 
-          <!-- PRATINJAU DOKUMEN RESMI DAFNIL (AREA CETAK) -->
+          <!-- DOKUMEN RESMI DAFNIL SIAP CETAK (KEMENTERIAN AGAMA REPUBLIK INDONESIA — MTs PN 2 KEEROM) -->
           <div id="printable-dafnil" class="bg-white rounded-2xl p-5 border border-slate-300 shadow-card text-slate-900">
-            <!-- Kop Resmi Dokumen -->
-            <div class="border-b-2 border-slate-900 pb-3 mb-4 flex items-center gap-3">
-              <div class="w-11 h-11 rounded-xl border-2 border-slate-900 flex items-center justify-center shrink-0">
-                <svg class="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+            <!-- Kop Surat Resmi Kemenag & MTs PN 2 KEEROM -->
+            <div class="border-b-[3px] border-double border-slate-900 pb-3 mb-4 flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl border-2 border-slate-900 flex items-center justify-center shrink-0">
+                <svg class="w-8 h-8 text-slate-900" viewBox="0 0 48 48" fill="none">
+                  <polygon points="24,3 30,11 40,11 40,21 45,27 40,33 40,41 30,41 24,46 18,41 8,41 8,33 3,27 8,21 8,11 18,11" stroke="currentColor" stroke-width="2.4"/>
+                  <path d="M14 20C17.5 18.5 21 19 24 21C27 19 30.5 18.5 34 20V32C30.5 30.5 27 31 24 33C21 31 17.5 30.5 14 32V20Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                  <path d="M24 21V33" stroke="currentColor" stroke-width="2"/>
                 </svg>
               </div>
               <div class="flex-1 text-center">
-                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Pemerintah Provinsi • Dinas Pendidikan</p>
-                <h3 class="text-sm sm:text-base font-black uppercase tracking-wide text-slate-900">${escapeHtml(cfg.schoolName)}</h3>
-                <p class="text-[11px] font-bold text-slate-700">DAFTAR NILAI HASIL EVALUASI BELAJAR (DAFNIL)</p>
+                <p class="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-800">KEMENTERIAN AGAMA REPUBLIK INDONESIA</p>
+                <h3 class="text-base sm:text-lg font-black uppercase tracking-wide text-slate-900 leading-tight">MTs PN 2 KEEROM</h3>
+                <p class="text-[10px] text-slate-600 font-medium">Kabupaten Keerom, Provinsi Papua • NPSN Madrasah Tsanawiyah Negeri/Swasta</p>
+                <p class="text-[11px] font-extrabold uppercase text-slate-900 mt-1 underline">DAFTAR NILAI HASIL EVALUASI BELAJAR (DAFNIL)</p>
               </div>
             </div>
 
-            <!-- Metadata Pelajaran & Ujian -->
+            <!-- Informasi Mata Pelajaran & Kelas -->
             <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-              <div><span class="text-slate-500">Mata Pelajaran:</span> <strong>${escapeHtml(cfg.subject)}</strong></div>
-              <div><span class="text-slate-500">Kelas:</span> <strong>${escapeHtml(cfg.targetClass)}</strong></div>
-              <div><span class="text-slate-500">Mode Evaluasi:</span> <strong>${escapeHtml(modeInfo.shortName)}</strong></div>
-              <div><span class="text-slate-500">Target KKM:</span> <strong>${analytics.kkm}</strong></div>
-              <div class="col-span-2"><span class="text-slate-500">Semester / TA:</span> <strong>${escapeHtml(cfg.semester)}</strong></div>
+              <div><span class="text-slate-500">Mata Pelajaran:</span> <strong>${escapeHtml(selectedSubject)}</strong></div>
+              <div><span class="text-slate-500">Kelas:</span> <strong>${selectedClass === 'ALL' ? 'Semua Kelas (VII – IX)' : escapeHtml(selectedClass)}</strong></div>
+              <div><span class="text-slate-500">Mode Ujian:</span> <strong>${escapeHtml(modeInfo.shortName)}</strong></div>
+              <div><span class="text-slate-500">KKM Madrasah:</span> <strong>${analytics.kkm}</strong></div>
+              <div class="col-span-2"><span class="text-slate-500">Semester / TP:</span> <strong>${escapeHtml(cfg.semester)}</strong></div>
             </div>
 
-            <!-- Tabel Daftar Nilai Resmi -->
+            <!-- Tabel Nilai Resmi -->
             <div id="dafnil-table-wrapper" class="overflow-x-auto mb-4">
-              <table class="w-full border-collapse border border-slate-400 text-[11px]">
+              <table class="w-full border-collapse border border-slate-500 text-[11px]">
                 <thead>
                   <tr class="bg-slate-100 text-slate-900 font-bold">
-                    <th class="border border-slate-400 py-1.5 px-1.5 text-center">No</th>
-                    <th class="border border-slate-400 py-1.5 px-2 text-left">NIS</th>
-                    <th class="border border-slate-400 py-1.5 px-2 text-left">Nama Peserta Didik</th>
-                    ${cols.map(c => `<th class="border border-slate-400 py-1.5 px-1.5 text-center">${escapeHtml(c.label)}</th>`).join('')}
-                    <th class="border border-slate-400 py-1.5 px-1.5 text-center">Jml</th>
-                    <th class="border border-slate-400 py-1.5 px-1.5 text-center">Akhir</th>
-                    <th class="border border-slate-400 py-1.5 px-1.5 text-center">Pred</th>
-                    <th class="border border-slate-400 py-1.5 px-2 text-center">Keterangan</th>
+                    <th class="border border-slate-500 py-1.5 px-1.5 text-center">No</th>
+                    <th class="border border-slate-500 py-1.5 px-2 text-left">NISN</th>
+                    <th class="border border-slate-500 py-1.5 px-2 text-left">Nama Peserta Didik</th>
+                    ${selectedClass === 'ALL' ? `<th class="border border-slate-500 py-1.5 px-1.5 text-center">Kelas</th>` : ''}
+                    ${cols.map(c => `<th class="border border-slate-500 py-1.5 px-1.5 text-center">${escapeHtml(c.label)}</th>`).join('')}
+                    <th class="border border-slate-500 py-1.5 px-1.5 text-center">Rata2</th>
+                    <th class="border border-slate-500 py-1.5 px-1.5 text-center">Pred</th>
+                    <th class="border border-slate-500 py-1.5 px-2 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${analytics.rows.map(r => `
+                  ${analytics.rows.length === 0 ? `
                     <tr>
-                      <td class="border border-slate-400 py-1 px-1.5 text-center">${r.no}</td>
-                      <td class="border border-slate-400 py-1 px-2 font-mono">${escapeHtml(r.nis)}</td>
-                      <td class="border border-slate-400 py-1 px-2 font-medium">${escapeHtml(r.name)}</td>
+                      <td colspan="${6 + cols.length + (selectedClass === 'ALL' ? 1 : 0)}" class="border border-slate-500 py-4 px-3 text-center text-slate-500 italic">
+                        Belum ada data siswa pada kelas ${escapeHtml(selectedClass)}. Silakan tambah siswa di Sheet Nilai atau pilih "Semua Kelas".
+                      </td>
+                    </tr>
+                  ` : analytics.rows.map(r => `
+                    <tr>
+                      <td class="border border-slate-500 py-1 px-1.5 text-center">${r.no}</td>
+                      <td class="border border-slate-500 py-1 px-2 font-mono">${escapeHtml(r.nisn)}</td>
+                      <td class="border border-slate-500 py-1 px-2 font-medium">${escapeHtml(r.name)}</td>
+                      ${selectedClass === 'ALL' ? `<td class="border border-slate-500 py-1 px-1.5 text-center font-semibold">${escapeHtml(r.kelas)}</td>` : ''}
                       ${cols.map(c => {
                         const v = r.scores[c.id];
-                        return `<td class="border border-slate-400 py-1 px-1.5 text-center">${v !== '' && v !== null && v !== undefined ? v : '-'}</td>`;
+                        return `<td class="border border-slate-500 py-1 px-1.5 text-center">${v !== '' && v !== null && v !== undefined ? v : '-'}</td>`;
                       }).join('')}
-                      <td class="border border-slate-400 py-1 px-1.5 text-center font-semibold">${r.sum}</td>
-                      <td class="border border-slate-400 py-1 px-1.5 text-center font-bold">${r.avg}</td>
-                      <td class="border border-slate-400 py-1 px-1.5 text-center font-bold">${r.predicate}</td>
-                      <td class="border border-slate-400 py-1 px-2 text-center font-semibold ${r.isTuntas ? 'text-emerald-800' : 'text-rose-700'}">${r.statusText}</td>
+                      <td class="border border-slate-500 py-1 px-1.5 text-center font-bold">${r.avg}</td>
+                      <td class="border border-slate-500 py-1 px-1.5 text-center font-bold">${r.predicate}</td>
+                      <td class="border border-slate-500 py-1 px-2 text-center font-bold ${r.isTuntas ? 'text-emerald-800' : 'text-rose-700'}">${r.statusText}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
             </div>
 
-            <!-- Statistik Rekapitulasi Kelas -->
-            <div class="grid grid-cols-4 gap-2 border border-slate-300 rounded-xl p-2.5 text-[10px] mb-5 bg-slate-50/70">
+            <!-- Rekapitulasi Statistik -->
+            <div class="grid grid-cols-4 gap-2 border border-slate-400 rounded-xl p-2.5 text-[10px] mb-5 bg-slate-50/70">
               <div>
-                <span class="text-slate-500 block">Rata-rata Kelas</span>
+                <span class="text-slate-500 block">Rata-Rata Kelas</span>
                 <strong class="text-xs text-slate-900">${analytics.classAvg}</strong>
               </div>
               <div>
@@ -2580,21 +2729,21 @@
               </div>
               <div>
                 <span class="text-slate-500 block">Ketuntasan</span>
-                <strong class="text-xs text-slate-900">${analytics.tuntasCount} Tuntas / ${analytics.remedialCount} Rem.</strong>
+                <strong class="text-xs text-slate-900">${analytics.tuntasCount} Tuntas (${analytics.passPercentage}%)</strong>
               </div>
             </div>
 
-            <!-- Kolom Tanda Tangan Resmi -->
+            <!-- Blok Tanda Tangan Resmi Kepala Madrasah & Guru Mata Pelajaran -->
             <div class="grid grid-cols-2 gap-4 text-[11px] pt-2">
               <div>
                 <p class="text-slate-600">Mengetahui,</p>
-                <p class="font-bold text-slate-900">Kepala Sekolah</p>
+                <p class="font-bold text-slate-900">Kepala Madrasah MTs PN 2 Keerom</p>
                 <div class="h-14"></div>
                 <p class="font-bold underline text-slate-900">${escapeHtml(cfg.principalName)}</p>
                 <p class="text-[10px] text-slate-600">NIP. ${escapeHtml(cfg.principalNip)}</p>
               </div>
               <div>
-                <p class="text-slate-600">Ditetapkan pada, ${todayIndo}</p>
+                <p class="text-slate-600">Keerom, ${todayIndo}</p>
                 <p class="font-bold text-slate-900">Guru Mata Pelajaran</p>
                 <div class="h-14"></div>
                 <p class="font-bold underline text-slate-900">${escapeHtml(cfg.teacherName)}</p>
@@ -2606,29 +2755,34 @@
       `;
     }
 
+    function updateDafnilFilter(key, val) {
+      appState[key] = val;
+      saveState();
+      renderApp();
+    }
+
     function printDafnilDocument() {
-      showToast('Membuka dialog cetak dokumen Dafnil...', 'info');
+      showToast('Membuka dialog cetak Dafnil MTs PN 2 KEEROM...', 'info');
       setTimeout(() => {
         window.print();
       }, 250);
     }
 
-    function exportDafnilCSV() {
-      const analytics = computeGradeAnalytics();
+    function exportDafnilCSV(filterClass = 'ALL') {
+      const analytics = computeGradeAnalytics(filterClass);
       const cols = appState.scoreColumns;
       const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
-      const headers = ['No', 'NIS', 'Nama Siswa', 'Kelas', ...cols.map(c => c.label), 'Jumlah', 'Nilai Akhir', 'Predikat', 'Keterangan'];
+      const headers = ['No', 'NISN', 'Nama Siswa', 'Kelas', ...cols.map(c => c.label), 'Rata-Rata', 'Predikat', 'Status'];
       const lines = [headers.map(esc).join(',')];
 
       analytics.rows.forEach(r => {
         const rowCells = [
           r.no,
-          r.nis,
+          r.nisn,
           r.name,
           r.kelas,
           ...cols.map(c => r.scores[c.id] !== '' && r.scores[c.id] !== undefined ? r.scores[c.id] : ''),
-          r.sum,
           r.avg,
           r.predicate,
           r.statusText
@@ -2636,7 +2790,8 @@
         lines.push(rowCells.map(esc).join(','));
       });
 
-      const filename = `Dafnil_${appState.examConfig.subject.replace(/\s+/g, '_')}_${appState.examConfig.targetClass.replace(/\s+/g, '_')}.csv`;
+      const kelasSlug = filterClass === 'ALL' ? 'Semua_Kelas' : filterClass.replace(/\s+/g, '_');
+      const filename = `Dafnil_MTs_PN_2_KEEROM_${kelasSlug}.csv`;
       triggerFileDownload(lines.join('\n'), filename, 'text/csv;charset=utf-8;');
       showToast(`File "${filename}" berhasil diekspor!`, 'success');
     }
@@ -2659,7 +2814,6 @@
       }
     }
 
-    // Inisialisasi aplikasi saat halaman dimuat
     window.addEventListener('DOMContentLoaded', () => {
       renderApp();
     });
