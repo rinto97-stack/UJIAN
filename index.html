@@ -2758,6 +2758,68 @@
     function updateDafnilFilter(key, val) {
       appState[key] = val;
       saveState();
+      // Tempelkan URL Web App dari Google Apps Script di sini:
+const GAS_API_URL = 'https://script.google.com/macros/s/PASTE_URL_ANDA_DI_SINI/exec';
+
+// 1. Tarik data terbaru (Soal, Token, Nilai Siswa) dari Google Sheets saat halaman dibuka
+async function loadDatabaseFromSheets() {
+  if (!GAS_API_URL || GAS_API_URL.includes('PASTE_URL')) return;
+  try {
+    showToast('Menyinkronkan data dari server madrasah...', 'info');
+    const response = await fetch(GAS_API_URL);
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      if (result.data.examConfig) appState.examConfig = { ...appState.examConfig, ...result.data.examConfig };
+      if (result.data.questions && result.data.questions.length > 0) appState.questions = result.data.questions;
+      if (result.data.scoreColumns && result.data.scoreColumns.length > 0) appState.scoreColumns = result.data.scoreColumns;
+      if (result.data.studentsData && result.data.studentsData.length > 0) appState.studentsData = result.data.studentsData;
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      if (typeof renderApp === 'function') renderApp();
+      showToast('Terhubung ke Google Sheets MTs PN 2 KEEROM', 'success');
+    }
+  } catch (err) {
+    console.warn('Mode offline / gagal memuat dari Sheets:', err);
+  }
+}
+
+// 2. Kirim perubahan ke Google Sheets (bebas CORS dengan text/plain)
+let syncTimeout = null;
+function pushToSheets(action, payload) {
+  if (!GAS_API_URL || GAS_API_URL.includes('PASTE_URL')) return;
+  fetch(GAS_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, payload })
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (!res.success) console.error('Sheets Error:', res.error);
+  })
+  .catch(err => console.error('Gagal kirim ke Sheets:', err));
+}
+
+// 3. Modifikasi saveState() agar otomatis menyinkronkan perubahan Guru/Admin ke Google Sheets
+const originalSaveState = saveState;
+saveState = function() {
+  originalSaveState();
+  // Debounce 1.5 detik agar tidak spam request saat guru mengetik di sheet nilai
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(() => {
+    if (appState.role === 'admin') {
+      pushToSheets('syncAll', {
+        examConfig: appState.examConfig,
+        questions: appState.questions,
+        scoreColumns: appState.scoreColumns,
+        studentsData: appState.studentsData
+      });
+    }
+  }, 1500);
+};
+
+// Jalankan sinkronisasi awal saat halaman selesai dimuat
+window.addEventListener('DOMContentLoaded', loadDatabaseFromSheets);
       renderApp();
     }
 
