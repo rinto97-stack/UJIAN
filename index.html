@@ -2882,3 +2882,182 @@ window.addEventListener('DOMContentLoaded', loadDatabaseFromSheets);
   </script>
 </body>
 </html>
+/**
+ * ============================================================================
+ * MODUL UNGGAH CSV, UNGGAH GAMBAR, & SIMPAN SOAL KE GOOGLE SHEETS
+ * ============================================================================
+ */
+
+// 1. Fungsi Simpan Bank Soal Secara Eksplisit ke Google Sheets
+async function simpanSoalKeSheets(tampilkanNotif = true) {
+  saveState(); // Simpan ke localStorage perangkat
+
+  if (!GAS_API_URL || GAS_API_URL.includes('PASTE_URL')) {
+    if (tampilkanNotif) showToast('Tersimpan di browser (URL Apps Script belum diisi)', 'warning');
+    return;
+  }
+
+  try {
+    if (tampilkanNotif) showToast('Menyimpan ' + appState.questions.length + ' soal ke Google Sheets...', 'info');
+    const res = await fetch(GAS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'saveQuestions',
+        payload: { questions: appState.questions }
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (tampilkanNotif) showToast(data.message, 'success');
+    } else {
+      showToast('Gagal menyimpan ke server: ' + data.error, 'error');
+    }
+  } catch (err) {
+    showToast('Koneksi terputus, soal tersimpan sementara di HP/PC', 'error');
+  }
+}
+
+// 2. Download Template CSV agar Guru Mudah Mengisi Soal di Excel
+function downloadTemplateSoalCSV() {
+  // Menggunakan pemisah titik koma (;) agar langsung rapi saat dibuka di Microsoft Excel Indonesia
+  const header = 'pertanyaan;opsi_a;opsi_b;opsi_c;opsi_d;kunci;bobot;pembahasan\n';
+  const contoh1 = '"Ibu kota Provinsi Papua adalah...";"Jayapura";"Keerom";"Merauke";"Timika";"A";20;"Jayapura adalah ibu kota Provinsi Papua."\n';
+  const contoh2 = '"Hasil dari 12 x 5 adalah...";"50";"55";"60";"65";"C";20;"12 dikali 5 sama dengan 60."\n';
+
+  const blob = new Blob(['\uFEFF' + header + contoh1 + contoh2], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Template_Soal_MTs_PN2_KEEROM.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Template CSV berhasil diunduh. Silakan edit di Excel!', 'success');
+}
+
+// 3. Proses Unggah File CSV & Langsung Simpan ke Google Sheets
+function handleUploadSoalCSV(event, modeGanti = true) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const text = e.target.result;
+    const parsedQuestions = parseCSVToQuestions(text);
+
+    if (parsedQuestions.length === 0) {
+      showToast('Format CSV tidak valid atau file kosong!', 'error');
+      event.target.value = '';
+      return;
+    }
+
+    if (modeGanti) {
+      appState.questions = parsedQuestions;
+    } else {
+      appState.questions = [...appState.questions, ...parsedQuestions];
+    }
+
+    if (typeof renderApp === 'function') renderApp();
+    await simpanSoalKeSheets(true);
+    event.target.value = ''; // Reset input file
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// Parser CSV Cerdas (Mendukung pemisah ';' Excel Indonesia maupun ',' standar)
+function parseCSVToQuestions(csvText) {
+  const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
+  if (lines.length < 2) return [];
+
+  // Deteksi otomatis pemisah kolom (; atau ,) dari baris header
+  const delimiter = lines[0].includes(';') ? ';' : ',';
+  const results = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    // Regex untuk memecah kolom dengan aman meskipun ada tanda kutip
+    const regex = new RegExp(`(?:^|${delimiter})(?:"([^"]*(?:""[^"]*)*)"|([^${delimiter}*]*))`, 'g');
+    const cols = [];
+    let match;
+    while ((match = regex.exec(lines[i])) !== null) {
+      let val = match[1] !== undefined ? match[1].replace(/""/g, '"') : match[2];
+      cols.push((val || '').trim());
+    }
+
+    if (cols.length >= 6 && cols[0]) {
+      results.push({
+        id: 'q_' + Date.now() + '_' + i,
+        pertanyaan: cols[0],
+        opsi_a: cols[1] || '-',
+        opsi_b: cols[2] || '-',
+        opsi_c: cols[3] || '-',
+        opsi_d: cols[4] || '-',
+        kunci: (cols[5] || 'A').toUpperCase().charAt(0),
+        bobot: Number(cols[6]) || 10,
+        pembahasan: cols[7] || '',
+        gambar_url: cols[8] || ''
+      });
+    }
+  }
+  return results;
+}
+
+// 4. Unggah Gambar Soal ke Google Drive & Dapatkan Link Otomatis
+async function uploadGambarSoal(fileInput, targetInputUrlId) {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Ukuran gambar maksimal 2 MB!', 'error');
+    return;
+  }
+
+  showToast('Mengunggah gambar ke Google Drive...', 'info');
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'uploadImage',
+          payload: {
+            base64: e.target.result,
+            mimeType: file.type,
+            fileName: file.name
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.imageUrl) {
+        const urlInput = document.getElementById(targetInputUrlId);
+        if (urlInput) urlInput.value = data.imageUrl;
+        showToast('Gambar berhasil diunggah!', 'success');
+      } else {
+        showToast('Gagal unggah gambar: ' + data.error, 'error');
+      }
+    } catch (err) {
+      showToast('Terjadi kesalahan saat mengunggah gambar.', 'error');
+    }
+  };
+  reader.readAsDataURL(file);
+}<div class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3.5 mb-4 space-y-2.5">
+  <div class="flex items-center justify-between">
+    <span class="text-xs font-extrabold text-[#047857]">📂 Impor &amp; Sinkronisasi Bank Soal</span>
+    <button type="button" onclick="downloadTemplateSoalCSV()" class="text-[11px] font-bold text-[#047857] underline hover:text-emerald-900">
+      ⬇ Unduh Template Excel (.csv)
+    </button>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2">
+    <!-- Tombol Unggah CSV -->
+    <label class="cursor-pointer py-2.5 px-3 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100/60 text-[#047857] font-bold text-xs text-center transition shadow-xs flex items-center justify-center gap-1.5">
+      <span>📤 Unggah File CSV</span>
+      <input type="file" accept=".csv" onchange="handleUploadSoalCSV(event, true)" class="hidden" />
+    </label>
+
+    <!-- Tombol Simpan Manual ke Google Sheets -->
+    <button type="button" onclick="simpanSoalKeSheets(true)" class="py-2.5 px-3 rounded-xl bg-[#047857] hover:bg-emerald-800 text-white font-bold text-xs transition shadow-xs flex items-center justify-center gap-1.5">
+      <span>☁️ Simpan ke Sheets</span>
+    </button>
+  </div>
+</div>
