@@ -135,4 +135,1230 @@
       }
       table {
         width: 100% !important;
-        border-collapse: collapse !important
+        border-collapse: collapse !important;
+        font-size: 11px !important;
+      }
+      th, td {
+        border: 1px solid #334155 !important;
+        padding: 5px 6px !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center sm:py-4 sm:px-3 text-slate-800">
+
+  <!-- Bingkai Aplikasi Mobile-First Utama -->
+  <div id="app-shell" class="w-full sm:max-w-[480px] min-h-screen sm:min-h-[820px] sm:max-h-[92vh] bg-slate-50 sm:rounded-[2.25rem] sm:border-[6px] sm:border-slate-900 shadow-mobile flex flex-col overflow-hidden relative">
+
+    <!-- Status Bar Ala Perangkat Mobile -->
+    <div class="no-print bg-slate-950 text-white px-5 py-1.5 flex items-center justify-between text-[11px] font-medium select-none shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span id="mobile-clock">08:00</span>
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span class="text-[10px] text-emerald-300 font-semibold tracking-wide">MTs PN 2 KEEROM</span>
+      </div>
+      <div class="hidden sm:block w-16 h-3 bg-black rounded-full"></div>
+      <div class="flex items-center gap-2 text-slate-300">
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2 20h20V4L2 20zm18-2H6.83L20 6.83V18z"/></svg>
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3C7.79 3 3.7 4.41.38 7L12 21.5 23.62 7C20.3 4.41 16.21 3 12 3z"/></svg>
+        <div class="w-5 h-2.5 border border-slate-300 rounded-[3px] p-[1px] flex items-center">
+          <div class="w-full h-full bg-emerald-400 rounded-[1px]"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Area Konten Dinamis Aplikasi -->
+    <div id="app-content" class="flex-1 flex flex-col overflow-hidden relative"></div>
+
+  </div>
+
+  <!-- TIRAI KUNCI LAYAR ANTI-SCREENSHOT & PRIVASI PENUH -->
+  <div id="screenshot-curtain" class="hidden fixed inset-0 z-[100] bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center select-none">
+    <div class="w-20 h-20 rounded-3xl bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center mb-5 animate-pulse">
+      <svg class="w-10 h-10 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+    </div>
+    <span class="px-3.5 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[11px] font-extrabold tracking-wider uppercase mb-3">
+      Sistem Keamanan Ujian Madrasah
+    </span>
+    <h2 class="text-lg sm:text-xl font-black text-white tracking-tight mb-2 max-w-sm">
+      LAYAR TERKUNCI — PROTEKSI ANTI-SCREENSHOT MTs PN 2 KEEROM
+    </h2>
+    <p id="curtain-reason" class="text-xs sm:text-sm text-slate-300 max-w-xs mb-5 leading-relaxed">
+      Sistem mendeteksi upaya pengambilan tangkapan layar, perpindahan tab, atau kehilangan fokus layar. Kejadian ini tercatat dalam log pelanggaran siswa.
+    </p>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl px-5 py-3 mb-6 max-w-xs w-full">
+      <p id="curtain-violation-status" class="text-xs font-bold text-rose-400">Pelanggaran Tercatat</p>
+      <p class="text-[11px] text-slate-400 mt-0.5">Soal disembunyikan sementara demi integritas ujian</p>
+    </div>
+    <button type="button" onclick="unlockScreenshotCurtain()" class="w-full max-w-xs py-3.5 px-5 rounded-2xl bg-[#047857] hover:bg-emerald-600 active:scale-[0.99] text-white font-extrabold text-sm shadow-lg shadow-emerald-900/40 transition">
+      🔓 Buka Kunci &amp; Lanjutkan Ujian
+    </button>
+  </div>
+
+  <!-- MODAL CUSTOM KONFIRMASI / INPUT -->
+  <div id="custom-modal" class="hidden fixed inset-0 z-[95] bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 animate-modal">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-[#047857] flex items-center justify-center mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h3 id="custom-modal-title" class="text-lg font-bold text-slate-900 mb-1">Konfirmasi</h3>
+      <p id="custom-modal-desc" class="text-xs sm:text-sm text-slate-600 mb-4 leading-relaxed"></p>
+      <div id="custom-modal-body" class="mb-4"></div>
+      <div class="flex gap-2.5">
+        <button id="custom-modal-cancel" onclick="closeCustomModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition">
+          Batal
+        </button>
+        <button id="custom-modal-confirm" class="flex-1 py-2.5 rounded-xl bg-[#047857] hover:bg-emerald-800 text-white font-semibold text-sm transition shadow-sm">
+          Ya, Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="no-print fixed top-12 left-1/2 -translate-x-1/2 z-[110] flex flex-col gap-2 w-[90%] max-w-[420px] pointer-events-none"></div>
+
+  <script>
+    /**
+     * ============================================================================
+     * KONFIGURASI BACKEND GOOGLE APPS SCRIPT (TEMPEL URL /exec ANDA DI SINI)
+     * ============================================================================
+     */
+    const GAS_API_URL = 'https://script.google.com/macros/s/PASTE_URL_ANDA_DI_SINI/exec';
+
+    const STORAGE_KEY = 'mts_pn2_keerom_cbt_v2';
+    const CLASS_OPTIONS = ['VII-A', 'VII-B', 'VIII-A', 'VIII-B', 'IX-A', 'IX-B'];
+
+    const EXAM_MODES = {
+      quiz: {
+        id: 'quiz',
+        name: 'Ujian Harian / Kuis Cepat',
+        shortName: 'Kuis Cepat',
+        badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        description: 'Feedback kunci jawaban & pembahasan langsung muncul seketika setelah siswa memilih opsi jawaban.',
+        features: ['Feedback Langsung', 'Acak Urutan Soal', 'Evaluasi Harian']
+      },
+      strict: {
+        id: 'strict',
+        name: 'UTS / UAS (Mode Ketat)',
+        shortName: 'UTS/UAS Ketat',
+        badgeBg: 'bg-rose-100 text-rose-800 border-rose-200',
+        description: 'Acak wajib soal & opsi jawaban, batas maksimal 2 pelanggaran fokus sebelum auto-submit, tanpa feedback langsung.',
+        features: ['Acak Soal & Opsi Wajib', 'Maks. 2 Pelanggaran', 'Tanpa Bocoran Kunci']
+      },
+      cat: {
+        id: 'cat',
+        name: 'Try Out / Simulasi CAT',
+        shortName: 'Simulasi CAT',
+        badgeBg: 'bg-amber-100 text-amber-900 border-amber-200',
+        description: 'Simulasi Computer Assisted Test dengan navigasi nomor soal interaktif dan penanda bendera kuning Ragu-Ragu.',
+        features: ['Navigasi Nomor CAT', 'Bendera Ragu-Ragu', 'Simulasi Ujian Akhir']
+      },
+      remedial: {
+        id: 'remedial',
+        name: 'Ujian Remedial',
+        shortName: 'Remedial KKM 75',
+        badgeBg: 'bg-teal-100 text-teal-900 border-teal-200',
+        description: 'Mode perbaikan ketuntasan belajar yang berfokus mencapai standar KKM 75 dan langsung menyinkronkan nilai.',
+        features: ['Fokus Target KKM 75', 'Status Tuntas Otomatis', 'Sinkron Sheet Nilai']
+      }
+    };
+
+    const DEFAULT_QUESTIONS = [
+      {
+        id: 'q1',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Dalam sistem bilangan biner yang digunakan pada perangkat komputer, angka desimal 13 jika dikonversi ke biner menjadi...',
+        opsi_a: '1011',
+        opsi_b: '1101',
+        opsi_c: '1110',
+        opsi_d: '1001',
+        kunci: 'B',
+        bobot: 15,
+        pembahasan: '13 = 8 + 4 + 0 + 1 = (1×2³) + (1×2²) + (0×2¹) + (1×2⁰) = 1101.',
+        gambar_url: ''
+      },
+      {
+        id: 'q2',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Perubahan wujud zat dari gas langsung menjadi padat tanpa melalui fase cair, seperti proses terbentuknya salju, disebut...',
+        opsi_a: 'Menyublim',
+        opsi_b: 'Mengembun',
+        opsi_c: 'Mengkristal (Deposisi)',
+        opsi_d: 'Membeku',
+        kunci: 'C',
+        bobot: 15,
+        pembahasan: 'Mengkristal atau deposisi adalah perubahan wujud dari gas langsung menjadi padat.',
+        gambar_url: ''
+      },
+      {
+        id: 'q3',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Pada aplikasi pengolah angka (Spreadsheet), fungsi yang digunakan untuk menghitung nilai rata-rata dari sekumpulan data adalah...',
+        opsi_a: 'SUM',
+        opsi_b: 'AVERAGE',
+        opsi_c: 'MAX',
+        opsi_d: 'COUNT',
+        kunci: 'B',
+        bobot: 10,
+        pembahasan: 'Fungsi AVERAGE menghitung nilai rata-rata aritmatika dari sekumpulan sel angka.',
+        gambar_url: ''
+      },
+      {
+        id: 'q4',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Jika diketahui persamaan linear satu variabel 4x - 5 = 19, maka nilai dari x + 3 adalah...',
+        opsi_a: '6',
+        opsi_b: '8',
+        opsi_c: '9',
+        opsi_d: '11',
+        kunci: 'C',
+        bobot: 15,
+        pembahasan: '4x = 19 + 5 → 4x = 24 → x = 6. Maka x + 3 = 6 + 3 = 9.',
+        gambar_url: ''
+      },
+      {
+        id: 'q5',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Organel pada sel tumbuhan yang berfungsi sebagai tempat berlangsungnya proses fotosintesis adalah...',
+        opsi_a: 'Kloroplas',
+        opsi_b: 'Mitokondria',
+        opsi_c: 'Ribosom',
+        opsi_d: 'Vakuola',
+        kunci: 'A',
+        bobot: 15,
+        pembahasan: 'Kloroplas mengandung zat hijau daun (klorofil) untuk menyerap energi cahaya dalam fotosintesis.',
+        gambar_url: ''
+      },
+      {
+        id: 'q6',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Protokol keamanan web yang mengenkripsi pertukaran data antara browser siswa dan server ujian ditandai dengan awalan...',
+        opsi_a: 'HTTP://',
+        opsi_b: 'FTP://',
+        opsi_c: 'HTTPS://',
+        opsi_d: 'SMTP://',
+        kunci: 'C',
+        bobot: 10,
+        pembahasan: 'HTTPS (Hypertext Transfer Protocol Secure) melindungi integritas dan kerahasiaan data.',
+        gambar_url: ''
+      },
+      {
+        id: 'q7',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Gagasan utama yang menjadi inti pembahasan dalam sebuah paragraf disebut...',
+        opsi_a: 'Kalimat penjelas',
+        opsi_b: 'Ide pokok',
+        opsi_c: 'Konjungsi antarparagraf',
+        opsi_d: 'Amanat cerita',
+        kunci: 'B',
+        bobot: 10,
+        pembahasan: 'Ide pokok merupakan gagasan utama yang mendasari pengembangan suatu paragraf.',
+        gambar_url: ''
+      },
+      {
+        id: 'q8',
+        kode_paket: 'INF-8A',
+        nama_paket: 'PAS Informatika Kelas VIII',
+        pertanyaan: 'Sumber energi terbarukan yang memanfaatkan aliran air sungai untuk menggerakkan turbin pembangkit listrik adalah...',
+        opsi_a: 'PLTU',
+        opsi_b: 'PLTD',
+        opsi_c: 'PLTA',
+        opsi_d: 'PLTG',
+        kunci: 'C',
+        bobot: 10,
+        pembahasan: 'PLTA (Pembangkit Listrik Tenaga Air) memanfaatkan energi potensial dan kinetik air.',
+        gambar_url: ''
+      }
+    ];
+
+    const SAMPLE_NEW_PACKAGE = [
+      {
+        id: 'pkg_mts_1',
+        kode_paket: 'TERPADU-8',
+        nama_paket: 'Evaluasi Terpadu Madrasah',
+        pertanyaan: 'Hasil dari (-18) + 25 - (-7) adalah...',
+        opsi_a: '0',
+        opsi_b: '14',
+        opsi_c: '-14',
+        opsi_d: '50',
+        kunci: 'B',
+        bobot: 20,
+        pembahasan: '-18 + 25 = 7; kemudian 7 - (-7) = 7 + 7 = 14.',
+        gambar_url: ''
+      },
+      {
+        id: 'pkg_mts_2',
+        kode_paket: 'TERPADU-8',
+        nama_paket: 'Evaluasi Terpadu Madrasah',
+        pertanyaan: 'Bagian mata yang berfungsi mengatur banyak sedikitnya cahaya yang masuk ke dalam bola mata adalah...',
+        opsi_a: 'Retina',
+        opsi_b: 'Kornea',
+        opsi_c: 'Pupil dan Iris',
+        opsi_d: 'Saraf optik',
+        kunci: 'C',
+        bobot: 20,
+        pembahasan: 'Iris mengatur besar kecilnya pupil untuk mengendalikan intensitas cahaya masuk.',
+        gambar_url: ''
+      },
+      {
+        id: 'pkg_mts_3',
+        kode_paket: 'TERPADU-8',
+        nama_paket: 'Evaluasi Terpadu Madrasah',
+        pertanyaan: 'Perangkat keras jaringan yang berfungsi menghubungkan dua atau lebih jaringan berbeda serta menentukan rute paket data adalah...',
+        opsi_a: 'Router',
+        opsi_b: 'Scanner',
+        opsi_c: 'Plotter',
+        opsi_d: 'Projector',
+        kunci: 'A',
+        bobot: 20,
+        pembahasan: 'Router bertugas meneruskan paket data antarjaringan komputer.',
+        gambar_url: ''
+      },
+      {
+        id: 'pkg_mts_4',
+        kode_paket: 'TERPADU-8',
+        nama_paket: 'Evaluasi Terpadu Madrasah',
+        pertanyaan: 'Kalimat berikut yang menggunakan kata baku sesuai Pedoman Umum Ejaan Bahasa Indonesia (PUEBI) adalah...',
+        opsi_a: 'Para siswa sedang melakukan praktek laboratorium.',
+        opsi_b: 'Jadwal ujian madrasah telah disahkan oleh kepala sekolah.',
+        opsi_c: 'Apotik itu buka selama dua puluh empat jam.',
+        opsi_d: 'Ia membeli obat menggunakan kwitansi resmi.',
+        kunci: 'B',
+        bobot: 20,
+        pembahasan: 'Kata "jadwal" merupakan bentuk baku (bukan "jadual").',
+        gambar_url: ''
+      },
+      {
+        id: 'pkg_mts_5',
+        kode_paket: 'TERPADU-8',
+        nama_paket: 'Evaluasi Terpadu Madrasah',
+        pertanyaan: 'Salah satu perilaku terpuji dalam mengerjakan ujian CBT adalah menjunjung tinggi sifat jujur yang dalam ajaran Islam dikenal dengan istilah...',
+        opsi_a: 'Amanah',
+        opsi_b: 'Shiddiq',
+        opsi_c: 'Tabligh',
+        opsi_d: 'Fathanah',
+        kunci: 'B',
+        bobot: 20,
+        pembahasan: 'Shiddiq berarti benar dan jujur dalam perkataan maupun perbuatan.',
+        gambar_url: ''
+      }
+    ];
+
+    function getInitialState() {
+      return {
+        role: null,
+        loginTab: 'student',
+        activeAdminTab: 'exam',
+        studentStage: 'lobby',
+        currentStudent: null,
+        classes: CLASS_OPTIONS.map(k => ({ kelas: k, wali_kelas: '' })),
+        draftKodePaket: 'INF-8A',
+        draftNamaPaket: 'PAS Informatika Kelas VIII',
+        examConfig: {
+          title: 'Penilaian Akhir Semester (PAS) Ganjil',
+          subject: 'Informatika & Literasi Digital',
+          targetClass: 'VIII-A',
+          token: 'UJIAN2026',
+          mode: 'strict',
+          durationMinutes: 15,
+          kkm: 75,
+          maxViolations: 2,
+          semester: 'Ganjil / Tahun Pelajaran 2026–2027',
+          teacherName: 'Ahmad Fauzi, S.Pd., Gr.',
+          teacherNip: '19860415 201101 1 008',
+          principalName: 'H. Muhammad Yusuf, S.Ag., M.Pd.I.',
+          principalNip: '19740920 200003 1 004',
+          active_paket: 'INF-8A',
+          status_ujian: 'AKTIF'
+        },
+        bankSoal: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+        questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+        scoreColumns: [
+          { id: 'col_uh1', label: 'UH 1' },
+          { id: 'col_uh2', label: 'UH 2' },
+          { id: 'col_uts', label: 'UTS' },
+          { id: 'col_uas', label: 'UAS' }
+        ],
+        studentsData: [
+          { id: 'st_1', nisn: '0114829101', name: 'Aisyah Nur Rahmah', kelas: 'VIII-A', scores: { col_uh1: 90, col_uh2: 88, col_uts: 86, col_uas: 92 }, note: '' },
+          { id: 'st_2', nisn: '0114829102', name: 'Muhammad Rizky Pratama', kelas: 'VIII-A', scores: { col_uh1: 78, col_uh2: 80, col_uts: 76, col_uas: 82 }, note: '' },
+          { id: 'st_3', nisn: '0114829103', name: 'Siti Fatimah Az-Zahra', kelas: 'VIII-A', scores: { col_uh1: 95, col_uh2: 92, col_uts: 94, col_uas: 96 }, note: '' },
+          { id: 'st_4', nisn: '0114829104', name: 'Ahmad Zaki Maulana', kelas: 'VIII-A', scores: { col_uh1: 68, col_uh2: 70, col_uts: 65, col_uas: 72 }, note: '' },
+          { id: 'st_5', nisn: '0114829105', name: 'Nabila Khairunnisa', kelas: 'VII-A', scores: { col_uh1: 84, col_uh2: 82, col_uts: 80, col_uas: 85 }, note: '' },
+          { id: 'st_6', nisn: '0114829106', name: 'Fadhil Akbar Wijaya', kelas: 'IX-A', scores: { col_uh1: 88, col_uh2: 86, col_uts: 85, col_uas: 90 }, note: '' }
+        ],
+        dafnilFilterClass: 'VIII-A',
+        dafnilFilterSubject: 'Informatika & Literasi Digital',
+        lastExamResult: null
+      };
+    }
+
+    let appState = (() => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.role === 'student' && parsed.studentStage === 'exam') {
+            parsed.studentStage = 'lobby';
+          }
+          return { ...getInitialState(), ...parsed };
+        }
+      } catch (e) {
+        console.warn('Gagal memuat state tersimpan:', e);
+      }
+      return getInitialState();
+    })();
+
+    let syncTimeout = null;
+    function saveState(autoSyncSheets = true) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        console.warn('Gagal menyimpan state:', e);
+      }
+
+      if (autoSyncSheets && appState.role === 'admin' && isGasConfigured()) {
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => {
+          pushToSheets('syncAll', {
+            examConfig: appState.examConfig,
+            scoreColumns: appState.scoreColumns,
+            studentsData: appState.studentsData
+          });
+        }, 1500);
+      }
+    }
+
+    function isGasConfigured() {
+      return GAS_API_URL && !GAS_API_URL.includes('PASTE_URL');
+    }
+
+    async function loadDatabaseFromSheets(silent = false) {
+      if (!isGasConfigured()) return;
+      try {
+        if (!silent) showToast('Menyinkronkan data dari server madrasah...', 'info');
+        const response = await fetch(GAS_API_URL);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          if (result.data.examConfig && Object.keys(result.data.examConfig).length > 0) {
+            appState.examConfig = { ...appState.examConfig, ...result.data.examConfig };
+          }
+          if (Array.isArray(result.data.classes) && result.data.classes.length > 0) {
+            appState.classes = result.data.classes;
+          }
+          if (Array.isArray(result.data.bankSoal) && result.data.bankSoal.length > 0) {
+            appState.bankSoal = result.data.bankSoal;
+          }
+          if (Array.isArray(result.data.questions) && result.data.questions.length > 0) {
+            appState.questions = result.data.questions;
+          }
+          if (Array.isArray(result.data.scoreColumns) && result.data.scoreColumns.length > 0) {
+            appState.scoreColumns = result.data.scoreColumns;
+          }
+          if (Array.isArray(result.data.studentsData) && result.data.studentsData.length > 0) {
+            appState.studentsData = result.data.studentsData;
+          }
+
+          saveState(false);
+          renderApp();
+          if (!silent) showToast('Terhubung ke Google Sheets MTs PN 2 KEEROM', 'success');
+        }
+      } catch (err) {
+        console.warn('Mode offline / gagal memuat dari Sheets:', err);
+      }
+    }
+
+    async function pushToSheets(action, payload) {
+      if (!isGasConfigured()) return { success: false, error: 'URL Apps Script belum diisi' };
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, payload })
+        });
+        return await res.json();
+      } catch (err) {
+        console.error('Gagal kirim ke Sheets:', err);
+        return { success: false, error: err.message };
+      }
+    }
+
+    let examSession = {
+      active: false,
+      questions: [],
+      currentIndex: 0,
+      answers: {},
+      doubts: {},
+      lockedQuestions: {},
+      remainingSeconds: 0,
+      totalSeconds: 0,
+      timerInterval: null,
+      violations: 0,
+      violationLogs: [],
+      lastViolationTime: 0,
+      initialWidth: window.innerWidth,
+      initialHeight: window.innerHeight
+    };
+
+    /**
+     * ============================================================================
+     * UTILITAS: EMBLEM MADRASAH, AUDIO BEEP, TOAST, MODAL CUSTOM, JAM LIVE
+     * ============================================================================
+     */
+
+    function renderMadrasahEmblem(sizeClass = 'w-16 h-16', iconClass = 'w-9 h-9') {
+      return `
+        <div class="${sizeClass} rounded-3xl bg-gradient-to-br from-[#047857] via-emerald-700 to-teal-900 text-white flex items-center justify-center shadow-lg shadow-emerald-900/25 border-2 border-emerald-400/30 shrink-0">
+          <svg class="${iconClass}" viewBox="0 0 48 48" fill="none">
+            <polygon points="24,3 30,11 40,11 40,21 45,27 40,33 40,41 30,41 24,46 18,41 8,41 8,33 3,27 8,21 8,11 18,11" stroke="currentColor" stroke-width="2.2" fill="rgba(255,255,255,0.1)"/>
+            <path d="M14 20C17.5 18.5 21 19 24 21C27 19 30.5 18.5 34 20V32C30.5 30.5 27 31 24 33C21 31 17.5 30.5 14 32V20Z" stroke="#fde68a" stroke-width="2.2" stroke-linejoin="round" fill="rgba(253,230,138,0.15)"/>
+            <path d="M24 21V33" stroke="#fde68a" stroke-width="2"/>
+            <circle cx="24" cy="13.5" r="2.2" fill="#fde68a"/>
+          </svg>
+        </div>
+      `;
+    }
+
+    function playBeep(type = 'warning') {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'warning') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(540, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(260, ctx.currentTime + 0.28);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(680, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(920, ctx.currentTime + 0.14);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.15);
+        }
+      } catch (e) {}
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const styles = {
+        success: 'bg-[#047857] text-white border-emerald-500',
+        error: 'bg-rose-600 text-white border-rose-500',
+        warning: 'bg-amber-500 text-slate-950 border-amber-400',
+        info: 'bg-slate-900 text-white border-slate-700'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-lg border text-xs sm:text-sm font-medium flex items-center justify-between gap-2 animate-modal ${styles[type] || styles.info}`;
+      toast.innerHTML = `
+        <span>${escapeHtml(message)}</span>
+        <button onclick="this.parentElement.remove()" class="opacity-75 hover:opacity-100 font-bold px-1">&times;</button>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.style.opacity = '0';
+          toast.style.transition = 'opacity 0.25s ease';
+          setTimeout(() => toast.remove(), 250);
+        }
+      }, 3400);
+    }
+
+    function openCustomModal({ title, desc, confirmText = 'Ya, Lanjutkan', confirmColor = 'bg-[#047857] hover:bg-emerald-800', bodyHtml = '', onConfirm }) {
+      const modal = document.getElementById('custom-modal');
+      document.getElementById('custom-modal-title').textContent = title;
+      document.getElementById('custom-modal-desc').textContent = desc;
+
+      const bodyEl = document.getElementById('custom-modal-body');
+      bodyEl.innerHTML = bodyHtml;
+      if (bodyHtml) {
+        bodyEl.classList.remove('hidden');
+      } else {
+        bodyEl.classList.add('hidden');
+      }
+
+      const confirmBtn = document.getElementById('custom-modal-confirm');
+      confirmBtn.textContent = confirmText;
+      confirmBtn.className = `flex-1 py-2.5 rounded-xl text-white font-semibold text-sm transition shadow-sm ${confirmColor}`;
+
+      confirmBtn.onclick = () => {
+        const shouldClose = onConfirm ? onConfirm() : true;
+        if (shouldClose !== false) {
+          closeCustomModal();
+        }
+      };
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeCustomModal() {
+      document.getElementById('custom-modal').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getLiveTimeString() {
+      const now = new Date();
+      return now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function updateMobileClock() {
+      const el = document.getElementById('mobile-clock');
+      if (el) {
+        const now = new Date();
+        el.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+      if (examSession.active) {
+        updateWatermarkClock();
+      }
+    }
+    setInterval(updateMobileClock, 1000);
+    updateMobileClock();
+
+    function getClassList() {
+      if (Array.isArray(appState.classes) && appState.classes.length > 0) {
+        return appState.classes.map(c => (typeof c === 'string' ? c : c.kelas));
+      }
+      return CLASS_OPTIONS;
+    }
+
+    /**
+     * ============================================================================
+     * 1. MULTI-ROLE LOGIN SCREEN (MTs PN 2 KEEROM)
+     * ============================================================================
+     */
+
+    function renderLoginView() {
+      const isStudent = appState.loginTab === 'student';
+      const activeMode = EXAM_MODES[appState.examConfig.mode] || EXAM_MODES.strict;
+      const classList = getClassList();
+      const targetClass = appState.examConfig.targetClass || classList[0];
+      const studentsInClass = (appState.studentsData || []).filter(s => s.kelas === targetClass);
+
+      return `
+        <div id="main-scroll-area" class="flex-1 overflow-y-auto px-5 py-6 flex flex-col justify-between">
+          <div>
+            <!-- Header Identitas MTs PN 2 KEEROM -->
+            <div class="text-center mb-6">
+              <div class="flex justify-center mb-3.5">
+                ${renderMadrasahEmblem('w-16 h-16', 'w-10 h-10')}
+              </div>
+              <span class="inline-block px-3 py-0.5 rounded-full bg-emerald-100 text-[#047857] text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                Kementerian Agama Kab. Keerom
+              </span>
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight">MTs PN 2 KEEROM</h1>
+              <p class="text-xs text-slate-500 mt-1 font-medium">Sistem Ujian CBT Mobile &amp; Pengolah Nilai</p>
+            </div>
+
+            <!-- Tab Switcher Peran -->
+            <div class="bg-slate-200/80 p-1 rounded-2xl grid grid-cols-2 gap-1 mb-5">
+              <button type="button" onclick="switchLoginTab('student')" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 ${isStudent ? 'bg-white text-[#047857] shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                Login Siswa
+              </button>
+              <button type="button" onclick="switchLoginTab('admin')" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 ${!isStudent ? 'bg-white text-[#047857] shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Login Guru / Admin
+              </button>
+            </div>
+
+            ${isStudent ? `
+              <!-- FORM LOGIN SISWA -->
+              <div class="bg-white rounded-3xl p-5 shadow-card border border-slate-100">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 class="text-base font-bold text-slate-900">Portal Peserta Ujian</h2>
+                    <p class="text-[11px] text-slate-500">Pilih kelas &amp; nama resmi dari sistem madrasah</p>
+                  </div>
+                  <button type="button" onclick="fillDemoStudent()" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#047857] text-[11px] font-bold transition">
+                    ⚡ Demo Siswa
+                  </button>
+                </div>
+
+                <form onsubmit="handleStudentLogin(event)" class="space-y-3.5">
+                  <div class="grid grid-cols-3 gap-2.5">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas</label>
+                      <select id="stu-kelas" onchange="onSelectLoginKelas(this.value)" required class="w-full px-2.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60">
+                        ${classList.map(k => `<option value="${k}" ${k === targetClass ? 'selected' : ''}>${k}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Siswa</label>
+                      <select id="stu-name-select" onchange="onSelectLoginStudentName(this)" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60">
+                        <option value="">-- Pilih Nama Anda (${studentsInClass.length}) --</option>
+                        ${studentsInClass.map(s => `<option value="${escapeHtml(s.name)}" data-nisn="${escapeHtml(s.nisn)}">${escapeHtml(s.name)}</option>`).join('')}
+                        <option value="__MANUAL__">+ Ketik Nama Manual...</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div id="stu-manual-name-wrap" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ketik Nama Lengkap</label>
+                    <input id="stu-name-manual" type="text" placeholder="Contoh: Muhammad Rizky Pratama" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">NISN (Verifikasi)</label>
+                      <input id="stu-nisn" type="text" required placeholder="0114829102" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
+                    </div>
+                    <div>
+                      <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs font-semibold text-slate-700">Token Ujian</label>
+                      </div>
+                      <input id="stu-token" type="text" required value="${escapeHtml(appState.examConfig.token)}" placeholder="Token Ujian" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
+                    </div>
+                  </div>
+
+                  <button type="submit" class="w-full py-3 rounded-2xl bg-gradient-to-r from-[#047857] to-emerald-600 hover:from-emerald-800 hover:to-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-900/20 transition active:scale-[0.99] mt-2">
+                    Masuk ke Ruang Ujian →
+                  </button>
+                </form>
+              </div>
+
+              <!-- Info Ujian Aktif -->
+              <div class="mt-4 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Jadwal Ujian Aktif</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${activeMode.badgeBg}">${escapeHtml(activeMode.shortName)}</span>
+                </div>
+                <p class="text-xs font-bold text-slate-800 line-clamp-1">${escapeHtml(appState.examConfig.title)} — ${escapeHtml(appState.examConfig.subject)}</p>
+                <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 mt-1.5">
+                  <span>📦 Paket: <strong class="text-[#047857]">${escapeHtml(appState.examConfig.active_paket || 'AKTIF')}</strong></span>
+                  <span>📝 ${appState.questions.length} Soal</span>
+                  <span>⏱️ ${appState.examConfig.durationMinutes} Menit</span>
+                  <span>🎯 KKM ${appState.examConfig.kkm}</span>
+                </div>
+              </div>
+            ` : `
+              <!-- FORM LOGIN GURU / ADMIN -->
+              <div class="bg-white rounded-3xl p-5 shadow-card border border-slate-100">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 class="text-base font-bold text-slate-900">Portal Guru &amp; Admin</h2>
+                    <p class="text-[11px] text-slate-500">Kelola bank soal, jadwal ujian &amp; cetak Dafnil</p>
+                  </div>
+                  <button type="button" onclick="fillDemoAdmin()" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#047857] text-[11px] font-bold transition">
+                    ⚡ Demo Admin
+                  </button>
+                </div>
+
+                <form onsubmit="handleAdminLogin(event)" class="space-y-3.5">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
+                    <input id="adm-user" type="text" required value="admin" placeholder="admin" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+                    <input id="adm-pass" type="password" required value="123456" placeholder="••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] bg-slate-50/60" />
+                  </div>
+                  <div class="bg-emerald-50/70 rounded-xl p-3 border border-emerald-200/70 text-[11px] text-slate-700 flex items-center justify-between">
+                    <span>Akun Default Guru/Admin:</span>
+                    <span class="font-mono font-bold text-[#047857]">admin / 123456</span>
+                  </div>
+                  <button type="submit" class="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-lg transition active:scale-[0.99]">
+                    Masuk Dashboard Guru / Admin →
+                  </button>
+                </form>
+              </div>
+            `}
+          </div>
+
+          <div class="text-center pt-5 pb-1">
+            <p class="text-[11px] text-slate-400 font-medium">MTs PN 2 KEEROM • Kab. Keerom, Papua</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function onSelectLoginKelas(selectedKelas) {
+      const nameSelect = document.getElementById('stu-name-select');
+      const manualWrap = document.getElementById('stu-manual-name-wrap');
+      if (!nameSelect) return;
+
+      const siswaDiKelas = (appState.studentsData || []).filter(s => s.kelas === selectedKelas);
+      nameSelect.innerHTML =
+        `<option value="">-- Pilih Nama Anda (${siswaDiKelas.length}) --</option>` +
+        siswaDiKelas.map(s => `<option value="${escapeHtml(s.name)}" data-nisn="${escapeHtml(s.nisn)}">${escapeHtml(s.name)}</option>`).join('') +
+        `<option value="__MANUAL__">+ Ketik Nama Manual...</option>`;
+
+      if (manualWrap) manualWrap.classList.add('hidden');
+      const nisnInput = document.getElementById('stu-nisn');
+      if (nisnInput) nisnInput.value = '';
+    }
+
+    function onSelectLoginStudentName(selectEl) {
+      const manualWrap = document.getElementById('stu-manual-name-wrap');
+      const nisnInput = document.getElementById('stu-nisn');
+      if (selectEl.value === '__MANUAL__') {
+        if (manualWrap) manualWrap.classList.remove('hidden');
+        if (nisnInput) nisnInput.value = '';
+        return;
+      }
+      if (manualWrap) manualWrap.classList.add('hidden');
+      const selectedOpt = selectEl.options[selectEl.selectedIndex];
+      const nisn = selectedOpt ? selectedOpt.getAttribute('data-nisn') : '';
+      if (nisn && nisnInput && !nisnInput.value) {
+        nisnInput.placeholder = 'Masukkan NISN Anda...';
+      }
+    }
+
+    function switchLoginTab(tab) {
+      appState.loginTab = tab;
+      saveState(false);
+      renderApp();
+    }
+
+    function fillDemoStudent() {
+      const targetClass = appState.examConfig.targetClass || 'VIII-A';
+      const kelasEl = document.getElementById('stu-kelas');
+      if (kelasEl) {
+        kelasEl.value = targetClass;
+        onSelectLoginKelas(targetClass);
+      }
+
+      const candidates = (appState.studentsData || []).filter(s => s.kelas === targetClass);
+      const pick = candidates.length > 0
+        ? candidates[Math.floor(Math.random() * candidates.length)]
+        : { name: 'Muhammad Rizky Pratama', nisn: '0114829102', kelas: 'VIII-A' };
+
+      const nameSelect = document.getElementById('stu-name-select');
+      if (nameSelect) {
+        const foundOption = Array.from(nameSelect.options).find(o => o.value === pick.name);
+        if (foundOption) {
+          nameSelect.value = pick.name;
+        } else {
+          nameSelect.value = '__MANUAL__';
+          onSelectLoginStudentName(nameSelect);
+          document.getElementById('stu-name-manual').value = pick.name;
+        }
+      }
+      document.getElementById('stu-nisn').value = pick.nisn;
+      document.getElementById('stu-token').value = appState.examConfig.token;
+      showToast(`Data demo siswa (${pick.name}) berhasil diisi!`, 'info');
+    }
+
+    function fillDemoAdmin() {
+      document.getElementById('adm-user').value = 'admin';
+      document.getElementById('adm-pass').value = '123456';
+      showToast('Kredensial demo Admin (admin / 123456) diisi.', 'info');
+    }
+
+    function handleStudentLogin(e) {
+      e.preventDefault();
+      const kelas = document.getElementById('stu-kelas').value;
+      const selectVal = document.getElementById('stu-name-select').value;
+      const name = selectVal === '__MANUAL__'
+        ? document.getElementById('stu-name-manual').value.trim()
+        : selectVal.trim();
+      const nisn = document.getElementById('stu-nisn').value.trim();
+      const token = document.getElementById('stu-token').value.trim().toUpperCase();
+
+      if (!name || !nisn || !kelas || !token) {
+        showToast('Harap pilih Nama Siswa, isi NISN, dan Token Ujian!', 'error');
+        return;
+      }
+
+      // Verifikasi NISN jika nama dipilih dari master sistem
+      if (selectVal !== '__MANUAL__') {
+        const masterStudent = (appState.studentsData || []).find(s => s.name === name && s.kelas === kelas);
+        if (masterStudent && String(masterStudent.nisn).trim() !== nisn) {
+          showToast('NISN tidak cocok dengan nama siswa yang dipilih!', 'error');
+          return;
+        }
+      }
+
+      if (token !== appState.examConfig.token.toUpperCase()) {
+        showToast(`Token ujian salah! Gunakan token aktif: ${appState.examConfig.token}`, 'error');
+        return;
+      }
+
+      appState.role = 'student';
+      appState.studentStage = 'lobby';
+      appState.currentStudent = { name, nisn, kelas, token };
+      saveState(false);
+      showToast(`Ahlan wa Sahlan, ${name}!`, 'success');
+      renderApp();
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('adm-user').value.trim();
+      const pass = document.getElementById('adm-pass').value.trim();
+
+      if (user === 'admin' && pass === '123456') {
+        appState.role = 'admin';
+        appState.activeAdminTab = 'exam';
+        saveState(false);
+        showToast('Berhasil masuk sebagai Guru / Admin MTs PN 2 KEEROM!', 'success');
+        renderApp();
+      } else {
+        showToast('Username atau Password salah! Gunakan admin / 123456.', 'error');
+      }
+    }
+
+    function logoutApp() {
+      stopExamSecurity();
+      appState.role = null;
+      appState.studentStage = 'lobby';
+      appState.currentStudent = null;
+      saveState(false);
+      renderApp();
+      showToast('Anda telah keluar dari sesi.', 'info');
+    }
+
+    /**
+     * ============================================================================
+     * 2, 4, 5. PORTAL SISWA: LOBI UJIAN, RUANG UJIAN ANTI-NYONTEK & HASIL NILAI
+     * ============================================================================
+     */
+
+    function renderStudentPortal() {
+      if (appState.studentStage === 'exam') {
+        return renderStudentExamRoom();
+      }
+      if (appState.studentStage === 'result') {
+        return renderStudentResultView();
+      }
+      return renderStudentLobby();
+    }
+
+    function renderStudentLobby() {
+      const cfg = appState.examConfig;
+      const modeInfo = EXAM_MODES[cfg.mode] || EXAM_MODES.strict;
+      const student = appState.currentStudent;
+      const effectiveMaxViolations = cfg.mode === 'strict' ? 2 : cfg.maxViolations;
+
+      return `
+        <div class="bg-white border-b border-slate-200 px-5 py-3.5 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#047857] text-white font-bold text-sm flex items-center justify-center">
+              ${escapeHtml(student.name.charAt(0).toUpperCase())}
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-900 leading-tight">${escapeHtml(student.name)}</p>
+              <p class="text-[11px] text-slate-500">NISN: ${escapeHtml(student.nisn)} • Kelas ${escapeHtml(student.kelas)}</p>
+            </div>
+          </div>
+          <button onclick="logoutApp()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-semibold transition">
+            Keluar
+          </button>
+        </div>
+
+        <div id="main-scroll-area" class="flex-1 overflow-y-auto p-5 space-y-4">
+          <div class="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">
+                ${escapeHtml(modeInfo.name)}
+              </span>
+              <span class="text-xs font-mono text-emerald-300">#${escapeHtml(cfg.token)}</span>
+            </div>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-0.5">MTs PN 2 KEEROM • PAKET ${escapeHtml(cfg.active_paket || 'AKTIF')}</p>
+            <h2 class="text-lg font-extrabold leading-snug mb-1">${escapeHtml(cfg.title)}</h2>
+            <p class="text-xs text-slate-300 mb-4">Mata Pelajaran: <strong>${escapeHtml(cfg.subject)}</strong></p>
+
+            <div class="grid grid-cols-3 gap-2 bg-white/10 rounded-2xl p-3 text-center">
+              <div>
+                <p class="text-[10px] text-slate-300 uppercase">Jumlah Soal</p>
+                <p class="text-base font-extrabold">${appState.questions.length}</p>
+              </div>
+              <div class="border-x border-white/15">
+                <p class="text-[10px] text-slate-300 uppercase">Durasi</p>
+                <p class="text-base font-extrabold">${cfg.durationMinutes} Mnt</p>
+              </div>
+              <div>
+                <p class="text-[10px] text-slate-300 uppercase">Target KKM</p>
+                <p class="text-base font-extrabold text-emerald-300">${cfg.kkm}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Karakteristik Mode Ujian Aktif</h3>
+            <p class="text-xs text-slate-600 leading-relaxed mb-3">${escapeHtml(modeInfo.description)}</p>
+            <div class="flex flex-wrap gap-1.5">
+              ${modeInfo.features.map(f => `
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#047857] text-[11px] font-semibold">✓ ${escapeHtml(f)}</span>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
+            <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
+              <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <span>Proteksi Anti-Nyontek &amp; Watermark Identitas Aktif</span>
+            </div>
+            <ul class="text-[11px] text-amber-800 space-y-1 pl-4 list-disc">
+              <li>Layar ujian dilindungi watermark identitas (<strong>${escapeHtml(student.name)} — ${escapeHtml(student.nisn)}</strong>).</li>
+              <li>Pindah tab, keluar aplikasi, atau menekan Screenshot akan langsung mengunci layar hitam.</li>
+              <li>Batas maksimal pelanggaran: <strong>${effectiveMaxViolations} kali</strong> sebelum ujian dikumpulkan otomatis.</li>
+            </ul>
+          </div>
+
+          <button onclick="startExamSession()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#047857] to-emerald-600 hover:from-emerald-800 hover:to-emerald-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-900/20 transition active:scale-[0.99] flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Mulai Kerjakan Ujian Sekarang
+          </button>
+        </div>
+      `;
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function startExamSession() {
+      if (!appState.questions || appState.questions.length === 0) {
+        showToast('Belum ada soal tersedia pada jadwal ujian aktif!', 'error');
+        return;
+      }
+
+      const cfg = appState.examConfig;
+      const shouldShuffleOptions = cfg.mode === 'strict' || cfg.mode === 'cat' || cfg.mode === 'remedial';
+
+      const shuffledQuestions = shuffleArray(appState.questions).map((q, idx) => {
+        const rawOptions = [
+          { origKey: 'A', text: q.opsi_a },
+          { origKey: 'B', text: q.opsi_b },
+          { origKey: 'C', text: q.opsi_c },
+          { origKey: 'D', text: q.opsi_d }
+        ];
+        const arranged = shouldShuffleOptions ? shuffleArray(rawOptions) : rawOptions;
+        const labels = ['A', 'B', 'C', 'D'];
+        let newCorrectKey = 'A';
+
+        const mappedOptions = arranged.map((opt, oIdx) => {
+          const displayKey = labels[oIdx];
+          if (opt.origKey === String(q.kunci).toUpperCase()) {
+            newCorrectKey = displayKey;
+          }
+          return {
+            displayKey,
+            text: opt.text
+          };
+        });
+
+        return {
+          ...q,
+          displayNumber: idx + 1,
+          options: mappedOptions,
+          correctDisplayKey: newCorrectKey
+        };
+      });
+
+      examSession = {
+        active: true,
+        questions: shuffledQuestions,
+        currentIndex: 0,
+        answers: {},
+        doubts: {},
+        lockedQuestions: {},
+        remainingSeconds: cfg.durationMinutes * 60,
+        totalSeconds: cfg.durationMinutes * 60,
+        timerInterval: null,
+        violations: 0,
+        violationLogs: [],
+        lastViolationTime: 0,
+        initialWidth: window.innerWidth,
+        initialHeight: window.innerHeight
+      };
+
+      if (cfg.mode === 'strict' && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+
+      appState.studentStage = 'exam';
+      renderApp();
+      startExamTimer();
+      attachExamSecurityListeners();
+    }
+
+    function getEffectiveMaxViolations() {
+      const cfg = appState.examConfig;
+      return cfg.mode === 'strict' ? 2 : (Number(cfg.maxViolations) || 3);
+    }
+
+    function startExamTimer() {
+      if (examSession.timerInterval) clearInterval(examSession.timerInterval);
+
+      examSession.timerInterval = setInterval(() => {
+        if (!examSession.active) {
+          clearInterval(examSession.timerInterval);
+          return;
+        }
+
+        examSession.remainingSeconds -= 1;
+        updateTimerUI();
+
+        if (examSession.remainingSeconds <= 0) {
+          clearInterval(examSession.timerInterval);
+          showToast('Waktu ujian habis! Jawaban dikumpulkan otomatis.', 'warning');
+          finishExam(false, 'Waktu Habis (Auto-Submit)');
+        }
+      }, 1000);
+    }
+
+    function formatTimeMMSS(sec) {
+      const s = Math.max(0, sec);
+      const mins = Math.floor(s / 60);
+      const rem = s % 60;
+      return `${String(mins).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+    }
+
+    function updateTimerUI() {
+      const timerBadge = document.getElementById('exam-timer-badge');
+      const timerBar = document.getElementById('exam-timer-bar');
+      if (!timerBadge || !timerBar) return;
+
+      const rem = examSession.remainingSeconds;
+      timerBadge.textContent = formatTimeMMSS(rem);
+
+      const pct = Math.max(0, Math.min(100, (rem / examSession.totalSeconds) * 100));
+      timerBar.style.width = `${pct}%`;
+
+      if (rem < 60) {
+        timerBadge.className = 'px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-600 text-white animate-pulse shadow-xs';
+        timerBar.className = 'h-full bg-rose-500 transition-all duration-500';
+      } else if (rem < 300) {
+        timerBadge.className = 'px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-400 text-slate-950 shadow-xs';
+        timerBar.className = 'h-full bg-amber-400 transition-all duration-500';
+      } else {
+        timerBadge.className = 'px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+        timerBar.className = 'h-full bg-emerald-400 transition-all duration-500';
+      }
+    }
+
+    function updateWatermarkClock() {
+      const wmContainer = document.getElementById('exam-watermark-grid');
+      if (!wmContainer || !appState.currentStudent) return;
+      const st = appState.currentStudent;
+      const text = `MTs PN 2 KEEROM • ${st.name} • ${st.nisn} • ${getLiveTimeString()}`;
+      const items = wmContainer.querySelectorAll('.watermark-item');
+      items.forEach(el => {
+        el.textContent = text;
+      });
+    }
+
+    function attachExamSecurityListeners() {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('blur', handleWindowBlur);
+      window.addEventListener('resize', handleWindowResize);
+      document.addEventListener('contextmenu', blockCheatEvent);
+      document.addEventListener('copy', blockCheatEvent);
+      document.addEventListener('cut', blockCheatEvent);
+      document.addEventListener('paste', blockCheatEvent);
+      document.addEventListener('keydown', handleSecurityKeydown);
+      document.addEventListener('keyup', handleSecurityKeyup);
+    }
+
+    function stopExamSecurity() {
+      examSession.active = false;
+      if (examSession.timerInterval) clearInterval(examSession.timerInterval);
+
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('resize', handleWindowResize);
+      document.removeEventListener('contextmenu', blockCheatEvent);
+      document.removeEventListener('copy', blockCheatEvent);
+      document.removeEventListener('cut', blockCheatEvent);
+      document.removeEventListener('paste', blockCheatEvent);
+      document.removeEventListener('keydown', handleSecurityKeydown);
+      document.removeEventListener('keyup', handleSecurityKeyup);
+
+      document.getElementById('screenshot-curtain')?.classList.add('hidden');
+    }
+
+    function blockCheatEvent(e) {
+      if (!examSession.active) return;
+      e.preventDefault();
+      showToast('Aksi klik kanan, salin, atau tempel diblokir sistem keamanan!', 'warning');
+    }
+
+    function handleVisibilityChange() {
+      if (!examSession.active) return;
+      if (document.hidden) {
+        triggerSecurityLockAndViolation('Terdeteksi keluar aplikasi atau berpindah tab peramban.');
+      }
+    }
+
+    function handleWindowBlur() {
+      if (!examSession.active) return;
+      triggerSecurityLockAndViolation('Layar ujian kehilangan fokus (membuka aplikasi lain atau jendela melayang).');
+    }
+
+    function handleWindowResize() {
+      if (!examSession.active) return;
+      const wDiff = Math.abs(window.innerWidth - examSession.initialWidth) / examSession.initialWidth;
+      const hShrink = (examSession.initialHeight - window.innerHeight) / examSession.initialHeight;
+      if (wDiff > 0.18 || hShrink > 0.42) {
+        triggerSecurityLockAndViolation('Terdeteksi perubahan ukuran layar mendadak (Split-Screen / Floating Window).');
+      }
+    }
+
+    function handleSecurityKeydown(e) {
+      if (!examSession.active) return;
+      const key = e.key.toLowerCase();
+
+      if (
+        e.key === 'PrintScreen' ||
+        ((e.ctrlKey || e.metaKey) && (key === 'p' || key === 's')) ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && (key === 's' || key === '3' || key === '4' || key === '5'))
+      ) {
+        e.preventDefault();
+        triggerSecurityLockAndViolation('Kombinasi tombol Screenshot / Cetak Layar terdeteksi!');
+        return;
+      }
+
+      if (
+        e.key === 'F12' ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && (key === 'i' || key === 'j' || key === 'c')) ||
+        ((e.ctrlKey || e.metaKey) && (key === 'c' || key === 'v' || key === 'x' || key === 'u' || key === 'a'))
+      ) {
+        e.preventDefault();
+        showToast('Pintasan keyboard dinonaktifkan selama ujian berlangsung!', 'warning');
